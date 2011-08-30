@@ -1,0 +1,6 @@
+# Disable any apache access in this folder with subfolder,
+# it is used as include only
+
+AllowOverride None
+Order deny,allow
+Deny from all
