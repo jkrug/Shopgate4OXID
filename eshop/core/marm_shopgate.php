@@ -2,7 +2,33 @@
 
 class marm_shopgate
 {
-
+    /**
+     * information about how shopgate config variables
+     * are editable in oxid admin GUI
+     * @var array
+     */
+    protected $_aConfig = array(
+        'customer_number' => 'input',
+        'shop_number' => 'input',
+        'apikey' => 'input',
+        'plugin' => false,
+        'enable_ping' => 'checkbox',
+        'enable_get_shop_info' => 'checkbox',
+        'enable_http_alert' => 'checkbox',
+        'enable_connect' => 'checkbox',
+        'enable_get_items_csv' => 'checkbox',
+        'enable_get_reviews_csv' => 'checkbox',
+        'enable_get_pages_csv' => 'checkbox',
+        'enable_get_log_file' => 'checkbox',
+        'enable_mobile_website' => 'checkbox',
+        'generate_items_csv_on_the_fly' => 'checkbox',
+        'max_attributes' => 'input',
+        'use_custom_error_handler' => 'checkbox',
+        'use_stock' => 'checkbox',
+        'shop_is_active' => 'checkbox',
+        'background_color' => 'input',
+        'foreground_color' => 'input'
+    );
     /**
      * defines where shopgate framework placed.
      */
@@ -12,7 +38,7 @@ class marm_shopgate
      * stores created instance of framework object.
      * @var ShopgateFramework
      */
-    protected $_oShopgateFramework = null
+    protected $_oShopgateFramework = null;
 
     /**
      * marm_shopgate class instance.
@@ -114,31 +140,53 @@ class marm_shopgate
     }
 
     /**
+     * returns array for framework filled with values from oxid configuration.
      * @return array
      */
-    public function _getConfigForFramework()
+    protected function _getConfigForFramework()
     {
-        return array(
-            'customer_number' => "12345",
-            'shop_number' => "54321",
-            'apikey' => "asdf",
-            'plugin' => "oxid",
-            'enable_ping' => true,
-            'enable_get_shop_info' => true,
-            'enable_http_alert' => true,
-            'enable_connect' => true,
-            'enable_get_items_csv' => true,
-            'enable_get_reviews_csv' => true,
-            'enable_get_pages_csv' => true,
-            'enable_get_log_file' => true,
-            'enable_mobile_website' => true,
-            'generate_items_csv_on_the_fly' => true,
-            'max_attributes' => 50,
-            'use_custom_error_handler' => false,
-            'use_stock' => false,
-            'shop_is_active' => false,
-            'background_color' => "#333",
-            'foreground_color' => "#3d3d3d",
-        );
+        $aConfig = array();
+        $oConfig = oxConfig::getInstance();
+        foreach ($this->_aConfig as $sConfigKey => $sType) {
+            if ($sValue = $oConfig->getShopConfVar('marm_shopgate_'.$sConfigKey)) {
+                $aConfig[$sConfigKey] = $sValue;
+            }
+        }
+        $aConfig['plugin'] = 'oxid';
+        return $aConfig;
+    }
+
+    /**
+     * returns shopgate config array with information
+     * how to display it in format:
+     * array(
+     *   [oxid_name] => marm_shopgate_customer_number
+     *   [shopgate_name] => customer_number
+     *   [type] => checkbox|input
+     *   [value] => 1234567890
+     * )
+     * @return array
+     */
+    public function getConfigForAdminGui()
+    {
+        $aConfig = array();
+        $oOxidConfig = oxConfig::getInstance();
+        $aShopgateConfig = ShopgateConfig::getConfig();
+        foreach ($this->_aConfig as $sConfigKey => $sType) {
+
+            if ($sConfigKey == 'plugin')  continue;
+
+            $sValue = $oOxidConfig->getShopConfVar('marm_shopgate_'.$sConfigKey);
+            if (!$sValue) {
+                $sValue = $aShopgateConfig[$sConfigKey];
+            }
+            $aConfig[] = array (
+                'oxid_name'     => 'marm_shopgate_'.$sConfigKey,
+                'shopgate_name' => $sConfigKey,
+                'type' => $sType,
+                'value' => $sValue
+            );
+        }
+        return $aConfig;
     }
 }
