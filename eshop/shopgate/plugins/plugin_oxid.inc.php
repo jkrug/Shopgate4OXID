@@ -5,9 +5,16 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
     const MULTI_SEPERATOR = '||';
     const PARENT_SEPERATOR = '=>';
+
+    protected $_sCurrency = 'EUR';
+    protected $_blOxidUsesStock = true;
+
     
     public function startup() 
     {
+        $oCur = oxConfig::getInstance()->getActShopCurrencyObject();
+        $this->_sCurrency = $oCur->name;
+        $this->_blOxidUsesStock = oxConfig::getInstance()->getConfigParam( 'blUseStock' );
         return true;
     }
     
@@ -48,6 +55,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
                 $aItem = array();
 
                 $aItem = $this->_loadRequiredFieldsForArticle($aItem, $oArticle);
+                $aItem = $this->_loadAdditionalFieldsForArticle($aItem, $oArticle);
 
                 $oArticle = null;
                 $rs->moveNext();
@@ -200,6 +208,59 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $aItem['available_text'] = $sText;
         return $aItem;
     }
+
+    protected function _loadAdditionalFieldsForArticle(array $aItem, oxArticle $oArticle)
+    {
+        $aItem = $this->_loadAttributesForArticle($aItem, $oArticle);
+        $aItem['manufacturer_item_number'] = $oArticle->oxarticles__oxmpn->value;
+        $aItem['currency'] = $this->_sCurrency;
+        $aItem['tax_percent'] = $oArticle->getArticleVat();
+        $aItem['msrp'] = round($oArticle->getTPrice()->getBruttoPrice(), 2);
+
+//        $aItem['shipping_costs_per_order'] = $oArticle->oxarticles__ox->value;
+//        $aItem['additional_shipping_costs_per_unit'] = $oArticle->oxarticles__ox->value;
+
+        if ((double) $oArticle->oxarticles__oxunitquantity->value && $oArticle->oxarticles__oxunitname->value) {
+            $aItem['basic_price'] = round($oArticle->getPrice()->getBruttoPrice() / (double) $this->oxarticles__oxunitquantity->value, 2);
+        }
+        else {
+            $aItem['basic_price'] = '';
+        }
+        if ($this->_blOxidUsesStock && $oArticle->oxarticles__oxstockflag->value != 4) {
+            $aItem['use_stock'] = 1;
+        }
+        else {
+            $aItem['use_stock'] = 0;
+        }
+        $aItem['stock_quantity'] = $oArticle->oxarticles__oxstock->value;
+        $aItem['ean'] = $oArticle->oxarticles__oxean->value;
+        $aItem['last_update'] = date('Y-m-d', strtotime($oArticle->oxarticles__oxtimestamp->value));
+        $aItem['tags'] = $oArticle->getTags();
+//        $aItem['sort_order'] = $oArticle->oxarticles__ox->value;
+//        $aItem['marketplace'] = die('todo');$oArticle->oxarticles__ox->value;
+//        $aItem['internal_order_info'] = $oArticle->oxarticles__ox->value;
+//        $aItem['related_shop_item_numbers'] = $oArticle->oxarticles__ox->value;
+//        $aItem['age_rating'] = $oArticle->oxarticles__ox->value;
+        $aItem['weight'] = $oArticle->oxarticles__oxweight->value*1000;
+        $aItem['is_free_shipping'] = $oArticle->oxarticles__oxfreeshipping->value;
+//        $aItem['block_pricing'] = die('todo');$oArticle->loadAmountPriceInfo();
+//        $aItem['category_numbers'] = $oArticle->oxarticles__ox->value;
+        return $aItem;
+    }
+
+    protected function _loadAttributesForArticle(array $aItem, oxArticle $oArticle)
+    {
+        $aProcessedAttributes = array();
+        $aAttributes = $oArticle->getAttributes();
+        foreach ($aAttributes as $oAttribute) {
+            $aProcessedAttributes[] = $oAttribute->oxattribute__oxtitle->value
+                                      . self::PARENT_SEPERATOR
+                                      . $oAttribute->oxattribute__oxvalue->value;
+        }
+        $aItem['properties'] = implode(MULTI_SEPERATOR, $aProcessedAttributes);
+        return $aItem;
+    }
+
 
     protected function createReviewsCsv()
     {
