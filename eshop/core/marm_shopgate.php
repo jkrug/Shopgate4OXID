@@ -135,7 +135,7 @@ class marm_shopgate
         }
         ShopgateConfig::setConfig($this->_getConfigForFramework());
 
-        $this->oShopgateFramework = oxNew('ShopgateFramework');
+        $this->_oShopgateFramework = oxNew('ShopgateFramework');
         return $this->_oShopgateFramework;
     }
 
