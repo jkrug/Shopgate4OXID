@@ -1,0 +1,1 @@
+ALTER TABLE `oxarticles` ADD `marm_shopgate_marketplace` TINYINT UNSIGNED NOT NULL DEFAULT '1';

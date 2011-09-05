@@ -226,6 +226,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         else {
             $aItem['basic_price'] = '';
         }
+
         if ($this->_blOxidUsesStock && $oArticle->oxarticles__oxstockflag->value != 4) {
             $aItem['use_stock'] = 1;
         }
@@ -237,14 +238,25 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $aItem['last_update'] = date('Y-m-d', strtotime($oArticle->oxarticles__oxtimestamp->value));
         $aItem['tags'] = $oArticle->getTags();
 //        $aItem['sort_order'] = $oArticle->oxarticles__ox->value;
-//        $aItem['marketplace'] = die('todo');$oArticle->oxarticles__ox->value;
+        $aItem['marketplace'] = $oArticle->oxarticles__marm_shopgate_marketplace->value;
 //        $aItem['internal_order_info'] = $oArticle->oxarticles__ox->value;
 //        $aItem['related_shop_item_numbers'] = $oArticle->oxarticles__ox->value;
 //        $aItem['age_rating'] = $oArticle->oxarticles__ox->value;
         $aItem['weight'] = $oArticle->oxarticles__oxweight->value*1000;
         $aItem['is_free_shipping'] = $oArticle->oxarticles__oxfreeshipping->value;
-//        $aItem['block_pricing'] = die('todo');$oArticle->loadAmountPriceInfo();
+        $aItem = $this->_loadAmountPricesForArticle($aItem, $oArticle);
 //        $aItem['category_numbers'] = $oArticle->oxarticles__ox->value;
+        return $aItem;
+    }
+
+    protected function _loadAmountPricesForArticle(array $aItem, oxArticle $oArticle)
+    {
+        $aPriceInfo = $oArticle->loadAmountPriceInfo();
+        $aParsed = array();
+        foreach ($aPriceInfo as $oPriceItem) {
+            $aParsed[] = $oPriceItem->oxprice2article__oxamount->value . self::PARENT_SEPERATOR . $oPriceItem->fbrutprice;
+        }
+        $aItem['block_pricing'] = implode(self::MULTI_SEPERATOR, $aParsed);
         return $aItem;
     }
 

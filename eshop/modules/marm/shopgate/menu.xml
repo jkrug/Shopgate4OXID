@@ -7,4 +7,9 @@
             </SUBMENU>
         </MAINMENU>
     </OXMENU>
+    <MAINMENU id="mxmanageprod">
+        <SUBMENU id="mxarticles" cl="article" list="article_list">
+            <TAB id="tbclmarm_shopgate_article" cl="marm_shopgate_article" />
+        </SUBMENU>
+    </MAINMENU>
 </OX>
