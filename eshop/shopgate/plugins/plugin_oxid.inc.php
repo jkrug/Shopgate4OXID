@@ -46,14 +46,14 @@ class ShopgatePlugin extends ShopgatePluginCore {
         ";
         $oArticleSaved = clone $oArticleBase;
         $rs = oxDb::getDb(true)->Execute( $sSelect);
+        $aDefaultRow = $this->buildDefaultRow();
 
-        $iTime = microtime( true );
         if ($rs != false && $rs->recordCount() > 0) {
             while (!$rs->EOF) {
                 $oArticle = clone $oArticleSaved;
                 $oArticle->assign($rs->fields);
 
-                $aItem = array();
+                $aItem = $aDefaultRow;
 
                 $aItem = $this->_loadRequiredFieldsForArticle($aItem, $oArticle);
                 $aItem = $this->_loadAdditionalFieldsForArticle($aItem, $oArticle);
@@ -128,12 +128,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
             return $this->_aCategoriesPath;
         }
         $sCategoriesTable = getViewName('oxcategories');
-        $oLang = oxLang::getInstance();
-        $sLangTag = oxLang::getInstance()->getLanguageTag();
-        $sLangAbbr = $oLang->getLanguageAbbr();
-        if (strpos($sCategoriesTable, 'oxv_') !== false && strpos($sCategoriesTable, '_'.$sLangAbbr) !== false) {
-            $sLangTag = '';
-        }
+        $sLangTag = $this->_getLanguageTagForTable($sCategoriesTable);
         $sTitleField = 'OXTITLE'.$sLangTag;
         $sSQL = "
             SELECT
@@ -175,17 +170,17 @@ class ShopgatePlugin extends ShopgatePluginCore {
         if ($this->_aManufacturers !== null && !$blReset) {
             return $this->_aManufacturers;
         }
-        $sLangTag = oxLang::getInstance()->getLanguageTag();
-        $sTitleField = 'OXTITLE'.$sLangTag;
         $sManufacturersTable = getViewName('oxmanufacturers');
-        $sSQL = '
+        $sLangTag = $this->_getLanguageTagForTable($sManufacturersTable);
+        $sTitleField = 'OXTITLE'.$sLangTag;
+        $sSQL = "
             SELECT
               OXID,
               {$sTitleField} as OXTITLE
             FROM
               {$sManufacturersTable}
-        ';
-        $this->_aManufacturers = oxDb::getDb(true)->getCol($sSQL);
+        ";
+        $this->_aManufacturers = oxDb::getDb(true)->GetAssoc($sSQL);
         if (!$this->_aManufacturers) {
             $this->_aManufacturers = array();
         }
@@ -231,7 +226,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
 //        $aItem['additional_shipping_costs_per_unit'] = $oArticle->oxarticles__ox->value;
 
         if ((double) $oArticle->oxarticles__oxunitquantity->value && $oArticle->oxarticles__oxunitname->value) {
-            $aItem['basic_price'] = round($oArticle->getPrice()->getBruttoPrice() / (double) $this->oxarticles__oxunitquantity->value, 2);
+            $aItem['basic_price'] = round($oArticle->getPrice()->getBruttoPrice() / (double) $oArticle->oxarticles__oxunitquantity->value, 2);
         }
         else {
             $aItem['basic_price'] = '';
@@ -293,15 +288,17 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $aItem['has_options']   = 1;
         $iCount = 0;
         foreach ($oSelectionList as $oListItem) {
-            $iCount++;
-            $aItem['option_'.$iCount] = $oListItem->getLabel();
-            $aSelectionValues = array();
-            foreach ($oListItem as $oSelection) {
-//                $sSelection = $oSelection->getName();
-                // TODO: price info in field field
-                $aSelectionValues[] = $oSelection->getName();
+            $aSelections = $oListItem->getSelections();
+            if ($aSelections) {
+                $iCount++;
+                $aItem['option_'.$iCount] = $oListItem->getLabel();
+                $aSelectionValues = array();
+                foreach ($aSelections as $oSelection) {
+                    // TODO: price info in field field
+                    $aSelectionValues[] = $oSelection->getName();
+                }
+                $aItem['option_'.$iCount.'_values'] = implode(self::MULTI_SEPERATOR, $aSelectionValues);
             }
-            $aItem['option_'.$iCount.'_values'] = implode(self::MULTI_SEPERATOR, $aSelectionValues);
         }
         
         return $aItem;
@@ -322,7 +319,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
             $aItem['parent_item_number'] = 0;
         }
         $sVariantOptions = $oArticle->oxarticles__oxvarname->value;
-        if (!$sVariantOptions) {
+        if ($oArticle->oxarticles__oxvarselect->value) {
             $sVariantOptions = $oArticle->oxarticles__oxvarselect->value;
         }
         if (!$sVariantOptions) {
@@ -339,13 +336,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _loadPersParamForArticle(array $aItem, oxArticle $oArticle)
     {
         if ($oArticle->oxarticles__oxisconfigurable->value) {
-            $aItem['has_children']          = 1;
+            $aItem['has_input_fields']      = 1;
             $aItem['input_field_1_type']    = 'text';
             $aItem['input_field_1_label']   = $this->_getTranslation('LABEL', array('PAGE_DETAILS_PERSPARAM_LABEL', 'DETAILS_LABEL'));
             $aItem['input_field_1_required']= 1;
         }
         else {
-            $aItem['has_children'] = 0;
+            $aItem['has_input_fields'] = 0;
         }
         return $aItem;
     }
@@ -363,6 +360,17 @@ class ShopgatePlugin extends ShopgatePluginCore {
             }
         }
         return $sTranslation;
+    }
+
+    protected function _getLanguageTagForTable($sTableName)
+    {
+        $oLang = oxLang::getInstance();
+        $sLangTag = oxLang::getInstance()->getLanguageTag();
+        $sLangAbbr = $oLang->getLanguageAbbr();
+        if (strpos($sTableName, 'oxv_') !== false && strpos($sTableName, '_'.$sLangAbbr) !== false) {
+            $sLangTag = '';
+        }
+        return $sLangTag;
     }
 
     protected function createReviewsCsv()
