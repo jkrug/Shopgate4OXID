@@ -6,6 +6,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
     const MULTI_SEPERATOR = '||';
     const PARENT_SEPERATOR = '=>';
 
+    protected $_sVariantSeparator = " | ";
+
     protected $_sCurrency = 'EUR';
     protected $_blOxidUsesStock = true;
 
@@ -41,7 +43,6 @@ class ShopgatePlugin extends ShopgatePluginCore {
               {$sArticleTable}
             WHERE
                 {$sSqlActiveSnippet}
-                AND {$sArticleTable}.oxparentid = ''
         ";
         $oArticleSaved = clone $oArticleBase;
         $rs = oxDb::getDb(true)->Execute( $sSelect);
@@ -56,6 +57,9 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
                 $aItem = $this->_loadRequiredFieldsForArticle($aItem, $oArticle);
                 $aItem = $this->_loadAdditionalFieldsForArticle($aItem, $oArticle);
+                $aItem = $this->_loadSelectionListForArticle($aItem, $oArticle);
+                $aItem = $this->_loadVariantsInfoForArticle($aItem, $oArticle);
+                $aItem = $this->_loadPersParamForArticle($aItem, $oArticle);
 
                 $oArticle = null;
                 $rs->moveNext();
@@ -192,7 +196,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     {
         $sMinTime = $oArticle->oxarticles__oxmindeltime->value;
         $sMaxTime = $oArticle->oxarticles__oxmaxdeltime->value;
-        $sTranslateIdent = 'DETAILS_' . $oArticle->oxarticles__oxdeltimeunit->value;
+        $sTranslateIdent = $oArticle->oxarticles__oxdeltimeunit->value;
         $sText = '';
         if ($sMinTime && $sMinTime != $sMaxTime) {
             $sText .= $sMinTime .' - ';
@@ -203,7 +207,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
         if ($sMaxTime > 1 || $sMinTime > 1) {
             $sTranslateIdent .='S';
         }
-        $sText .= ' '.oxLang::getInstance()->translateString($sTranslateIdent);
+        $sText .= ' '.$this->_getTranslation(
+            $sTranslateIdent,
+            array(
+                 'PAGE_DETAILS_DELIVERYTIME_'.$sTranslateIdent,
+                 'DETAILS_'.$sTranslateIdent
+            )
+        );
 
         $aItem['available_text'] = $sText;
         return $aItem;
@@ -269,10 +279,91 @@ class ShopgatePlugin extends ShopgatePluginCore {
                                       . self::PARENT_SEPERATOR
                                       . $oAttribute->oxattribute__oxvalue->value;
         }
-        $aItem['properties'] = implode(MULTI_SEPERATOR, $aProcessedAttributes);
+        $aItem['properties'] = implode(self::MULTI_SEPERATOR, $aProcessedAttributes);
         return $aItem;
     }
 
+    protected function _loadSelectionListForArticle(array $aItem, oxArticle $oArticle)
+    {
+        $oSelectionList = $oArticle->getSelections();
+        if (!$oSelectionList) {
+            $aItem['has_options'] = 0;
+            return $aItem;
+        }
+        $aItem['has_options']   = 1;
+        $iCount = 0;
+        foreach ($oSelectionList as $oListItem) {
+            $iCount++;
+            $aItem['option_'.$iCount] = $oListItem->getLabel();
+            $aSelectionValues = array();
+            foreach ($oListItem as $oSelection) {
+//                $sSelection = $oSelection->getName();
+                // TODO: price info in field field
+                $aSelectionValues[] = $oSelection->getName();
+            }
+            $aItem['option_'.$iCount.'_values'] = implode(self::MULTI_SEPERATOR, $aSelectionValues);
+        }
+        
+        return $aItem;
+    }
+
+    protected function _loadVariantsInfoForArticle(array $aItem, oxArticle $oArticle)
+    {
+        if ($oArticle->oxarticles__oxvarcount->value) {
+            $aItem['has_children']   = 1;
+        }
+        else {
+            $aItem['has_children'] = 0;
+        }
+        if ($oParentArticle = $oArticle->getParentArticle()) {
+            $aItem['parent_item_number'] = $oParentArticle->oxarticles__oxartnum->value;
+        }
+        else {
+            $aItem['parent_item_number'] = 0;
+        }
+        $sVariantOptions = $oArticle->oxarticles__oxvarname->value;
+        if (!$sVariantOptions) {
+            $sVariantOptions = $oArticle->oxarticles__oxvarselect->value;
+        }
+        if (!$sVariantOptions) {
+            return $aItem;
+        }
+        $iCount = 0;
+        foreach (explode($this->_sVariantSeparator, $sVariantOptions) as $sVariantOption) {
+            $iCount++;
+            $aItem['attribute_'.$iCount] = $sVariantOption;
+        }
+        return $aItem;
+    }
+
+    protected function _loadPersParamForArticle(array $aItem, oxArticle $oArticle)
+    {
+        if ($oArticle->oxarticles__oxisconfigurable->value) {
+            $aItem['has_children']          = 1;
+            $aItem['input_field_1_type']    = 'text';
+            $aItem['input_field_1_label']   = $this->_getTranslation('LABEL', array('PAGE_DETAILS_PERSPARAM_LABEL', 'DETAILS_LABEL'));
+            $aItem['input_field_1_required']= 1;
+        }
+        else {
+            $aItem['has_children'] = 0;
+        }
+        return $aItem;
+    }
+
+    protected function _getTranslation($sIdent, $aAlternatives = array())
+    {
+        $oLang = oxLang::getInstance();
+        $sTranslation = $oLang->translateString($sIdent);
+        if (count($aAlternatives) && $sTranslation == $sIdent) {
+            foreach ($aAlternatives as $sAlternative) {
+                $sTranslation = $oLang->translateString($sAlternative);
+                if ($sAlternative != $sTranslation) {
+                    return $sTranslation;
+                }
+            }
+        }
+        return $sTranslation;
+    }
 
     protected function createReviewsCsv()
     {
