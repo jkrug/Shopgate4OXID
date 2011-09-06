@@ -385,7 +385,38 @@ class ShopgatePlugin extends ShopgatePluginCore {
     
     public function getUserData($user, $pass)
     {
+        $oUser = oxNew( 'oxuser' );
+        try{
+            $oUser->login( $user, $pass);
+        }
+        catch(Exception $e){
+            throw new ShopgateConnectException("Invalid username or password", ShopgateConnectException::INVALID_USERNAME_OR_PASSWORD);
+        }
 
+        $oUserData = new ShopgateShopCustomer();
+        $oUserData->setCustomerNumber($oUser->oxuser__oxcustnr->value);
+        $oUserData->setFirstName($oUser->oxuser__oxfname->value);
+        $oUserData->setSurname($oUser->oxuser__oxlname->value);
+        $oUserData->setMail($oUser->oxuser__oxusername->value);
+        $oUserData->setPhone($oUser->oxuser__oxfon->value);
+        $oUserData->setMobile($oUser->oxuser__oxmobfon->value);
+        if (strtolower($oUser->oxuser__oxsal->value) == 'mrs') {
+            $oUserData->setGender(ShopgateShopCustomer::FEMALE);
+        }
+        elseif (strtolower($oUser->oxuser__oxsal->value) == 'mr')  {
+            $oUserData->setGender(ShopgateShopCustomer::MALE);
+        }
+        $oUserData->setStreet($oUser->oxuser__oxstreet->value . ' ' . $oUser->oxuser__oxstreetnr->value);
+        $oUserData->setCity($oUser->oxuser__oxcity->value);
+        $oUserData->setZip($oUser->oxuser__oxzip->value);
+        $oUserData->setCountry($oUser->getUserCountry());
+        if ($oUser->oxuser__oxcompany->value) {
+            $oUserData->setCompany($oUser->oxuser__oxcompany->value);
+        }
+        else {
+            $oUserData->setCompany('NONE');
+        }
+        return $oUserData;
     }
     
     public function createShopInfo(){}

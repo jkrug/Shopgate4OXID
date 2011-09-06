@@ -111,12 +111,27 @@ class marm_shopgate
     }
 
     /**
+     * returns full path there connect_api class is defined
+     * @return string
+     */
+    protected function _getConnectFile()
+    {
+        $sFile = $this->_getFrameworkDir()
+                 . 'lib'
+                 . DIRECTORY_SEPARATOR
+                 . 'connect_api.php'
+        ;
+        return $sFile;
+    }
+
+    /**
      * function loads framework by including it
      * @return void
      */
     public function init()
     {
         require_once $this->_getFrameworkFile();
+        require_once $this->_getConnectFile();
     }
 
 
