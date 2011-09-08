@@ -423,6 +423,65 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
     public function saveOrder(ShopgateOrder $order)
     {
-        
+        $oNewOrder = oxNew('oxorder');
+
+        $oNewOrder->oxorder__oxtotalordersum = new oxField($order->getAmountComplete()/100, oxField::T_RAW);
+        /** @var $oPrice oxPrice */
+        $oPrice = oxNew('oxprice');
+        $oPrice->setPrice($order->getAmountItems()/100, oxConfig::getInstance()->getConfigParam( 'dDefaultVAT' ));
+
+        $oNewOrder->oxorder__oxtotalnetsum   = new oxField(oxUtils::getInstance()->fRound($oPrice->getNettoPrice()), oxField::T_RAW);
+        $oNewOrder->oxorder__oxtotalbrutsum  = new oxField(oxUtils::getInstance()->fRound($oPrice->getBruttoPrice()), oxField::T_RAW);
+
+        $oNewOrder->oxorder__oxartvat1      = new oxField($oPrice->getVat(), oxField::T_RAW);
+        $oNewOrder->oxorder__oxartvatprice1 = new oxField($oPrice->getVatValue(), oxField::T_RAW);
+
+//        // delivery info
+//        if ( ( $oDeliveryCost = $oBasket->getCosts( 'oxdelivery' ) ) ) {
+//            $oNewOrder->oxorder__oxdelcost = new oxField($oDeliveryCost->getBruttoPrice(), oxField::T_RAW);
+//            //V #M382: Save VAT, not VAT value for delivery costs
+//            $oNewOrder->oxorder__oxdelvat  = new oxField($oDeliveryCost->getVAT(), oxField::T_RAW); //V #M382
+//            $oNewOrder->oxorder__oxdeltype = new oxField($oBasket->getShippingId(), oxField::T_RAW);
+//        }
+
+        // user remark
+        $aDeliveryNotes = $order->getDeliversNotes();
+        if ( $aDeliveryNotes ) {
+            if (is_array($aDeliveryNotes)) {
+                $oNewOrder->oxorder__oxremark = new oxField(var_export($aDeliveryNotes, true), oxField::T_RAW);
+            }
+            else {
+                $oNewOrder->oxorder__oxremark = new oxField($aDeliveryNotes, oxField::T_RAW);
+            }
+
+        }
+
+        // currency
+        $oNewOrder->oxorder__oxcurrency = new oxField($order->getOrderCurrency());
+        $oNewOrder->oxorder__oxcurrate  = new oxField(1, oxField::T_RAW);
+
+        // general discount
+        if ( $oNewOrder->_blReloadDiscount ) {
+            $dDiscount = 0;
+            $aDiscounts = $oBasket->getDiscounts();
+            if ( count($aDiscounts) > 0 ) {
+                foreach ($aDiscounts as $oDiscount) {
+                    $dDiscount += $oDiscount->dDiscount;
+                }
+            }
+            $oNewOrder->oxorder__oxdiscount = new oxField($dDiscount, oxField::T_RAW);
+        }
+
+        //order language
+        $oNewOrder->oxorder__oxlang = new oxField( $oNewOrder->getOrderLanguage() );
+
+
+        // initial status - 'ERROR'
+        $oNewOrder->oxorder__oxtransstatus = new oxField('ERROR', oxField::T_RAW);
+
+        // copies basket product info ...
+        $oNewOrder->_setOrderArticles( $oBasket->getContents() );
+
+
     }
 }
