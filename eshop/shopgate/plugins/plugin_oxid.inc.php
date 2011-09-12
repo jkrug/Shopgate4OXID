@@ -436,14 +436,6 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oNewOrder->oxorder__oxartvat1      = new oxField($oPrice->getVat(), oxField::T_RAW);
         $oNewOrder->oxorder__oxartvatprice1 = new oxField($oPrice->getVatValue(), oxField::T_RAW);
 
-//        // delivery info
-//        if ( ( $oDeliveryCost = $oBasket->getCosts( 'oxdelivery' ) ) ) {
-//            $oNewOrder->oxorder__oxdelcost = new oxField($oDeliveryCost->getBruttoPrice(), oxField::T_RAW);
-//            //V #M382: Save VAT, not VAT value for delivery costs
-//            $oNewOrder->oxorder__oxdelvat  = new oxField($oDeliveryCost->getVAT(), oxField::T_RAW); //V #M382
-//            $oNewOrder->oxorder__oxdeltype = new oxField($oBasket->getShippingId(), oxField::T_RAW);
-//        }
-
         // user remark
         $aDeliveryNotes = $order->getDeliversNotes();
         if ( $aDeliveryNotes ) {
@@ -460,28 +452,92 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oNewOrder->oxorder__oxcurrency = new oxField($order->getOrderCurrency());
         $oNewOrder->oxorder__oxcurrate  = new oxField(1, oxField::T_RAW);
 
-        // general discount
-        if ( $oNewOrder->_blReloadDiscount ) {
-            $dDiscount = 0;
-            $aDiscounts = $oBasket->getDiscounts();
-            if ( count($aDiscounts) > 0 ) {
-                foreach ($aDiscounts as $oDiscount) {
-                    $dDiscount += $oDiscount->dDiscount;
-                }
-            }
-            $oNewOrder->oxorder__oxdiscount = new oxField($dDiscount, oxField::T_RAW);
-        }
-
         //order language
         $oNewOrder->oxorder__oxlang = new oxField( $oNewOrder->getOrderLanguage() );
 
 
-        // initial status - 'ERROR'
-        $oNewOrder->oxorder__oxtransstatus = new oxField('ERROR', oxField::T_RAW);
+        $oNewOrder->oxorder__oxtransstatus = new oxField('FROM_SHOPGATE', oxField::T_RAW);
+
+        $oNewOrder->save();
 
         // copies basket product info ...
-        $oNewOrder->_setOrderArticles( $oBasket->getContents() );
+        $this->_saveOrderArticles($oNewOrder, $order);
 
+        $oNewOrder->save();
+    }
 
+    protected function _saveOrderArticles(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
+    {
+        $oArticles = oxNew( 'oxlist' );
+        foreach ($oShopgateOrder->getOrderItems() as $oShopgateOrderItem) {
+            /**@var $oShopgateOrderItem ShopgateOrderItem */
+
+            $oProduct = $this->_getArticleByNumber($oShopgateOrderItem->getItemNumber());
+
+            $oOrderArticle = oxNew( 'oxorderarticle' );
+
+            $oOrderArticle->setIsNewOrderItem( true );
+            $oOrderArticle->copyThis( $oProduct );
+            $oOrderArticle->setId();
+
+            $oOrderArticle = $this->_loadSelectionsForOrderArticle($oOrderArticle, $oShopgateOrderItem, $oProduct);
+
+            $oOrderArticle->oxorderarticles__oxartnum     = new oxField( $oShopgateOrderItem->getItemNumber(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxtitle      = new oxField( $oShopgateOrderItem->getName(), oxField::T_RAW );
+//            $oOrderArticle->oxorderarticles__oxpersparam = new oxField( serialize( array() ), oxField::T_RAW );
+
+            // ids, titles, numbers ...
+            $oOrderArticle->oxorderarticles__oxorderid = new oxField( $oOxidOrder->getId() );
+            $oOrderArticle->oxorderarticles__oxartid   = new oxField( $oProduct->getId() );
+            $oOrderArticle->oxorderarticles__oxamount  = new oxField( $oShopgateOrderItem->getQuantity() );
+
+            // prices
+            $oOrderArticle->oxorderarticles__oxnetprice  = new oxField( $oShopgateOrderItem->getUnitAmount(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxvatprice  = new oxField( $oShopgateOrderItem->getUnitAmountWithTax() - $oShopgateOrderItem->getUnitAmount(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxbrutprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxvat       = new oxField( $oShopgateOrderItem->getTaxPercent(), oxField::T_RAW );
+
+            $oOrderArticle->oxorderarticles__oxnprice = new oxField( $oShopgateOrderItem->getUnitAmount()/$oShopgateOrderItem->getQuantity(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxbprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/$oShopgateOrderItem->getQuantity(), oxField::T_RAW );
+
+            // items shop id
+            $oOrderArticle->oxorderarticles__oxordershopid = new oxField( $oProduct->getShopId(), oxField::T_RAW );
+
+            $oArticles->offsetSet( $oOrderArticle->getId(), $oOrderArticle );
+        }
+        $oOxidOrder->setOrderArticleList($oArticles);
+    }
+
+    protected function _loadSelectionsForOrderArticle(
+            oxorderarticle $oOrderArticle,
+            ShopgateOrderItem $oShopgateOrderItem,
+            oxArticle $oProduct
+        )
+    {
+        // set chosen selectlist
+        $sSelList = '';
+        if ( $oShopgateOrderItem->getHasOptions() ) {
+            foreach ( $oShopgateOrderItem->getOptions() as $oOption ) {
+                if ( $sSelList ) {
+                    $sSelList .= ", ";
+                }
+                $sSelList .= "{$oOption->getName()} : {$oOption->getValue()}";
+            }
+        }
+        $oOrderArticle->oxorderarticles__oxselvariant = new oxField( trim( $sSelList.' '.$oProduct->oxarticles__oxvarselect->getRawValue() ), oxField::T_RAW );
+        return $oOrderArticle;
+
+    }
+
+    /**
+     * loads shop article by article number (at this moment oxartnum is used)
+     * @param $sArticleNumber
+     * @return oxarticle
+     */
+    protected function _getArticleByNumber($sArticleNumber)
+    {
+        $sArticleTable = getViewName('oxarticles');
+        $sArticleId = oxDb::getDb()->getOne("SELECT oxid FROM {$sArticleTable} WHERE oxartnum = ?", array($sArticleNumber));
+        return oxNewArticle($sArticleId);
     }
 }
