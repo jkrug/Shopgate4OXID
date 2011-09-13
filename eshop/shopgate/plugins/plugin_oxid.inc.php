@@ -428,7 +428,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oNewOrder->oxorder__oxtotalordersum = new oxField($order->getAmountComplete()/100, oxField::T_RAW);
         /** @var $oPrice oxPrice */
         $oPrice = oxNew('oxprice');
-        $oPrice->setPrice($order->getAmountItems()/100, oxConfig::getInstance()->getConfigParam( 'dDefaultVAT' ));
+        $oPrice->setPrice($order->getAmountItems()/100.0, oxConfig::getInstance()->getConfigParam( 'dDefaultVAT' ));
 
         $oNewOrder->oxorder__oxtotalnetsum   = new oxField(oxUtils::getInstance()->fRound($oPrice->getNettoPrice()), oxField::T_RAW);
         $oNewOrder->oxorder__oxtotalbrutsum  = new oxField(oxUtils::getInstance()->fRound($oPrice->getBruttoPrice()), oxField::T_RAW);
@@ -447,6 +447,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
             }
 
         }
+        $oNewOrder = $this->_loadOrderContacts($oNewOrder, $order);
 
         // currency
         $oNewOrder->oxorder__oxcurrency = new oxField($order->getOrderCurrency());
@@ -457,6 +458,11 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
 
         $oNewOrder->oxorder__oxtransstatus = new oxField('FROM_SHOPGATE', oxField::T_RAW);
+        $oNewOrder->oxorder__oxfolder      = new oxField(key( oxConfig::getInstance()->getShopConfVar(  'aOrderfolder' ) ), oxField::T_RAW);
+
+//        $oNewOrder->oxorder__oxpaymentid
+//        $oNewOrder->oxorder__oxpaymenttype
+//        $oNewOrder->oxorder__oxdeltype
 
         $oNewOrder->save();
 
@@ -464,6 +470,106 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $this->_saveOrderArticles($oNewOrder, $order);
 
         $oNewOrder->save();
+    }
+
+    protected function _loadOrderContacts(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
+    {
+        $sPhone = $oShopgateOrder->getCustomerMobile();
+        if (empty($sPhone)) {
+            $sPhone = $oShopgateOrder->getCustomerPhone();
+        }
+        $oOxidOrder->oxorder__oxuserid       = new oxField($this->_getUserOxidByEmail($oShopgateOrder->getCustomerMail()), oxField::T_RAW);
+
+        $oInvoiceAddress = $oShopgateOrder->getInvoiceAddress();
+        // bill address
+        $oOxidOrder->oxorder__oxbillcompany     = new oxField($oInvoiceAddress->getCompany(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillemail       = new oxField($oShopgateOrder->getCustomerMail(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillfname       = new oxField($oInvoiceAddress->getFirstName(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbilllname       = new oxField($oInvoiceAddress->getSurname(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillstreet      = new oxField($oInvoiceAddress->getStreet(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillcity        = new oxField($oInvoiceAddress->getCity(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillcountryid   = new oxField(
+            $this->_getCountryId($oInvoiceAddress->getCountry(), $oInvoiceAddress->getCountryName()),
+            oxField::T_RAW
+        );
+        $oOxidOrder->oxorder__oxbillstateid   = new oxField(
+            $this->_getCountryId($oInvoiceAddress->getState(), $oInvoiceAddress->getStateName()),
+            oxField::T_RAW
+        );
+        $oOxidOrder->oxorder__oxbillzip         = new oxField($oInvoiceAddress->getZipcode(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillfon         = new oxField($sPhone, oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillfax         = new oxField($oShopgateOrder->getCustomerFax(), oxField::T_RAW);
+        if (strtolower($oInvoiceAddress->getGender()) == 'm') {
+        $oOxidOrder->oxorder__oxbillsal         = new oxField('MR', oxField::T_RAW);
+        }
+        elseif (strtolower($oInvoiceAddress->getGender()) == 'f') {
+            $oOxidOrder->oxorder__oxbillsal         = new oxField('MRS', oxField::T_RAW);
+        }
+
+        $oDelAdress = $oShopgateOrder->getDeliveryAddress();
+
+        $oOxidOrder->oxorder__oxdelcompany     = new oxField($oDelAdress->getCompany(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelfname       = new oxField($oDelAdress->getFirstName(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdellname       = new oxField($oDelAdress->getSurname(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelstreet      = new oxField($oDelAdress->getStreet(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelcity        = new oxField($oDelAdress->getCity(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelcountryid   = new oxField(
+            $this->_getCountryId($oDelAdress->getCountry(), $oDelAdress->getCountryName()),
+            oxField::T_RAW
+        );
+        $oOxidOrder->oxorder__oxdelstateid   = new oxField(
+            $this->_getCountryId($oDelAdress->getState(), $oDelAdress->getStateName()),
+            oxField::T_RAW
+        );
+        $oOxidOrder->oxorder__oxdelzip         = new oxField($oDelAdress->getZipcode(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelfon         = new oxField($sPhone, oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelfax         = new oxField($oShopgateOrder->getCustomerFax(), oxField::T_RAW);
+        if (strtolower($oDelAdress->getGender()) == 'm') {
+        $oOxidOrder->oxorder__oxdelsal         = new oxField('MR', oxField::T_RAW);
+        }
+        elseif (strtolower($oInvoiceAddress->getGender()) == 'f') {
+            $oOxidOrder->oxorder__oxdelsal         = new oxField('MRS', oxField::T_RAW);
+        }
+
+        return $oOxidOrder;
+    }
+
+    protected function _getUserOxidByEmail($sUserEmail)
+    {
+        $sUserOxid = oxDb::getDb()->getOne(
+            "SELECT OXID FROM oxuser WHERE OXUSERNAME = ?",
+            array($sUserEmail)
+        );
+        if (!$sUserOxid) {
+            $sUserOxid = null;
+        }
+        return $sUserOxid;
+    }
+
+    protected function _getCountryId($sShopgateCountryId, $sCountryName)
+    {
+        $sLangTag = oxLang::getInstance()->getLanguageTag();
+        $sCountryId = oxDb::getDb()->getOne(
+            "SELECT OXID FROM oxcountry WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
+            array($sShopgateCountryId, $sCountryName)
+        );
+        if (!$sCountryId) {
+            $sCountryId = null;
+        }
+        return $sCountryId;
+    }
+
+    protected function _getStateId($sShopgateStateId, $sStateName)
+    {
+        $sLangTag = oxLang::getInstance()->getLanguageTag();
+        $sCountryId = oxDb::getDb()->getOne(
+            "SELECT OXID FROM oxstates WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
+            array($sShopgateStateId, $sStateName)
+        );
+        if (!$sCountryId) {
+            $sCountryId = null;
+        }
+        return $sCountryId;
     }
 
     protected function _saveOrderArticles(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
@@ -492,13 +598,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
             $oOrderArticle->oxorderarticles__oxamount  = new oxField( $oShopgateOrderItem->getQuantity() );
 
             // prices
-            $oOrderArticle->oxorderarticles__oxnetprice  = new oxField( $oShopgateOrderItem->getUnitAmount(), oxField::T_RAW );
-            $oOrderArticle->oxorderarticles__oxvatprice  = new oxField( $oShopgateOrderItem->getUnitAmountWithTax() - $oShopgateOrderItem->getUnitAmount(), oxField::T_RAW );
-            $oOrderArticle->oxorderarticles__oxbrutprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxnetprice  = new oxField( $oShopgateOrderItem->getUnitAmount()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxvatprice  = new oxField( ($oShopgateOrderItem->getUnitAmountWithTax() - $oShopgateOrderItem->getUnitAmount())/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxbrutprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/100.0, oxField::T_RAW );
             $oOrderArticle->oxorderarticles__oxvat       = new oxField( $oShopgateOrderItem->getTaxPercent(), oxField::T_RAW );
 
-            $oOrderArticle->oxorderarticles__oxnprice = new oxField( $oShopgateOrderItem->getUnitAmount()/$oShopgateOrderItem->getQuantity(), oxField::T_RAW );
-            $oOrderArticle->oxorderarticles__oxbprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/$oShopgateOrderItem->getQuantity(), oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxnprice = new oxField( $oShopgateOrderItem->getUnitAmount()/$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxbprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
 
             // items shop id
             $oOrderArticle->oxorderarticles__oxordershopid = new oxField( $oProduct->getShopId(), oxField::T_RAW );
