@@ -27,7 +27,20 @@ class marm_shopgate
         'use_stock' => 'checkbox',
         'shop_is_active' => 'checkbox',
         'background_color' => 'input',
-        'foreground_color' => 'input'
+        'foreground_color' => 'input',
+        'server' => 'input'
+    );
+
+    /**
+     * contains array of files which will be included from library
+     * to get framework working
+     * @var array
+     */
+    protected $_aFilesToInclude = array(
+        'framework.php',
+        'connect_api.php',
+        'core_api.php',
+        'order_api.php'
     );
     /**
      * defines where shopgate framework placed.
@@ -97,31 +110,12 @@ class marm_shopgate
     }
 
     /**
-     * returns full path there framework class is defined
+     * returns path of framework library
      * @return string
      */
-    protected function _getFrameworkFile()
+    protected function _getLibraryDir()
     {
-        $sFile = $this->_getFrameworkDir()
-                 . 'lib'
-                 . DIRECTORY_SEPARATOR
-                 . 'framework.php'
-        ;
-        return $sFile;
-    }
-
-    /**
-     * returns full path there connect_api class is defined
-     * @return string
-     */
-    protected function _getConnectFile()
-    {
-        $sFile = $this->_getFrameworkDir()
-                 . 'lib'
-                 . DIRECTORY_SEPARATOR
-                 . 'connect_api.php'
-        ;
-        return $sFile;
+        return $this->_getFrameworkDir() . 'lib' . DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -130,8 +124,12 @@ class marm_shopgate
      */
     public function init()
     {
-        require_once $this->_getFrameworkFile();
-        require_once $this->_getConnectFile();
+        foreach ($this->_aFilesToInclude as $sFile) {
+            $sFile = $this->_getLibraryDir() . $sFile;
+            if (file_exists($sFile)) {
+                require_once $sFile;
+            }
+        }
     }
 
 
