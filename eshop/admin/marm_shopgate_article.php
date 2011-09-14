@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Admin controller for shopgate tab in article list, so Shopgate values
+ * can be set and edited.
+ */
 class marm_shopgate_article extends oxAdminDetails
 {
     protected $_sThisTemplate = 'marm_shopgate_article.tpl';
@@ -25,7 +29,6 @@ class marm_shopgate_article extends oxAdminDetails
         $this->_oArticle = oxNewArticle($soxId);
 
         return $this->_oArticle;
-
     }
 
     /**
@@ -35,10 +38,8 @@ class marm_shopgate_article extends oxAdminDetails
      */
     public function save()
     {
-        $myConfig = $this->getConfig();
         $soxId    = $this->getEditObjectId();
         $aParams  = oxConfig::getParameter( "editval" );
-
 
         $oArticle = oxNew( "oxarticle");
         $oArticle->setLanguage($this->_iEditLang);

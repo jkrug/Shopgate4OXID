@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Admin controller for Shopgate config tab
+ */
 class marm_shopgate_config extends Shop_Config
 {
     /**
