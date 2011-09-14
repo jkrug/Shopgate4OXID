@@ -87,15 +87,6 @@ class marm_shopgate
     }
 
     /**
-     * object initialization (build paths, load config) is called,
-     * then new object is created.
-     */
-    public function __construct()
-    {
-        $this->init();
-    }
-
-    /**
      * returns full path, where framework is placed.
      * @return string
      */
@@ -146,6 +137,7 @@ class marm_shopgate
         if ($this->_oShopgateFramework !== null && !$blReset) {
             return $this->_oShopgateFramework;
         }
+        $this->init();
         ShopgateConfig::setConfig($this->_getConfigForFramework());
 
         $this->_oShopgateFramework = oxNew('ShopgateFramework');
@@ -184,6 +176,7 @@ class marm_shopgate
     {
         $aConfig = array();
         $oOxidConfig = oxConfig::getInstance();
+        $this->init();
         $aShopgateConfig = ShopgateConfig::getConfig();
         foreach ($this->_aConfig as $sConfigKey => $sType) {
 
