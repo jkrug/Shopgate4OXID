@@ -136,5 +136,36 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertTrue(strpos($sResult, $sSelectWhere) !== false);
     }
 
+    public function test__loadFieldsForArticle()
+    {
+        $aChain = array(
+            '_loadRequiredFieldsForArticle',
+            '_loadAdditionalFieldsForArticle',
+            '_loadSelectionListForArticle',
+            '_loadVariantsInfoForArticle',
+            '_loadPersParamForArticle'
+        );
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            $aChain
+        );
+        $oArticle = oxNew('oxArticle');
+        $aItem = array();
+        $aInputArray = array();
+        $iChainNumber = 1;
+        $aOutputArray = array();
+        foreach ($aChain as $sMethod) {
+            $aInputArray = $aOutputArray;
+            $aOutputArray[] = $iChainNumber++;
+            $oPlugin
+                ->expects($this->once())
+                ->method($sMethod)
+                ->with($aInputArray, $oArticle)
+                ->will($this->returnValue($aOutputArray))
+            ;
+        }
+
+        $this->assertEquals($aOutputArray, $oPlugin->_loadFieldsForArticle(array(), $oArticle));
+    }
     
 }
