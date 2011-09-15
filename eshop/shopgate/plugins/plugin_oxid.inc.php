@@ -54,6 +54,11 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $sSelect;
     }
 
+    /**
+     * loads default row ($this->buildDefaultRow()) and
+     * for each article will overwrite data, and pass to $this->addItem()
+     * @return void
+     */
     protected function createItemsCsv()
     {
         $oArticleBase = $this->_getArticleBase();
@@ -70,17 +75,35 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
                 $aItem = $aDefaultRow;
 
-                $aItem = $this->_loadRequiredFieldsForArticle($aItem, $oArticle);
-                $aItem = $this->_loadAdditionalFieldsForArticle($aItem, $oArticle);
-                $aItem = $this->_loadSelectionListForArticle($aItem, $oArticle);
-                $aItem = $this->_loadVariantsInfoForArticle($aItem, $oArticle);
-                $aItem = $this->_loadPersParamForArticle($aItem, $oArticle);
+                $this->_loadFieldsForArticle($aItem, $oArticle);
 
                 $oArticle = null;
                 $rs->moveNext();
                 $this->addItem($aItem);
             }
         }
+    }
+
+    /**
+     * executes load chain for given article:
+     *  - required fields
+     *  - additional fields
+     *  - selection list fields
+     *  - variant fields
+     *  - persistent param fields
+     *
+     * @param array $aItem
+     * @param oxArticle $oArticle
+     * @return array
+     */
+    protected function _loadFieldsForArticle(array $aItem, oxArticle $oArticle)
+    {
+        $aItem = $this->_loadRequiredFieldsForArticle($aItem, $oArticle);
+        $aItem = $this->_loadAdditionalFieldsForArticle($aItem, $oArticle);
+        $aItem = $this->_loadSelectionListForArticle($aItem, $oArticle);
+        $aItem = $this->_loadVariantsInfoForArticle($aItem, $oArticle);
+        $aItem = $this->_loadPersParamForArticle($aItem, $oArticle);
+        return $aItem;
     }
 
     protected function _loadRequiredFieldsForArticle(array $aItem, oxArticle $oArticle)
