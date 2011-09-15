@@ -136,6 +136,48 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertTrue(strpos($sResult, $sSelectWhere) !== false);
     }
 
+    public function test_createItemsCsv()
+    {
+        $sTestSql = 'SELECT * FROM oxarticles LIMIT 2';
+        $oxArticle = oxNew('oxArticle');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getArticleBase',
+                '_getArticleSQL',
+                'buildDefaultRow',
+                '_loadFieldsForArticle',
+                'addItem'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getArticleBase')
+            ->will($this->returnValue($oxArticle))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getArticleSQL')
+            ->with($oxArticle)
+            ->will($this->returnValue($sTestSql))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('buildDefaultRow')
+            ->will($this->returnValue(array()))
+        ;
+        $oPlugin
+            ->expects($this->exactly(2))
+            ->method('_loadFieldsForArticle')
+        ;
+        $oPlugin
+            ->expects($this->exactly(2))
+            ->method('addItem')
+        ;
+        $oPlugin->createItemsCsv();
+
+    }
+
     public function test__loadFieldsForArticle()
     {
         $aChain = array(
@@ -150,8 +192,6 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             $aChain
         );
         $oArticle = oxNew('oxArticle');
-        $aItem = array();
-        $aInputArray = array();
         $iChainNumber = 1;
         $aOutputArray = array();
         foreach ($aChain as $sMethod) {
