@@ -12,7 +12,11 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected $_blOxidUsesStock = true;
 
     
-    public function startup() 
+    /**
+     * loads variables that are used in runtime
+     * @return bool true
+     */
+    public function startup()
     {
         $oCur = oxConfig::getInstance()->getActShopCurrencyObject();
         $this->_sCurrency = $oCur->name;
@@ -20,20 +24,26 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return true;
     }
     
-    protected function createItemsCsv()
+    /**
+     * formats oxarticle object for list usage. will be used to clone and load data from DB
+     * @return oxArticle
+     */
+    protected function _getArticleBase()
     {
-//http://oxid.mskuodas-l.usr.nfq.lt/?cl=marm_shopgate_api&apikey=abcdefg&customer_number=123456&shop_number=12345&action=get_items_csv
-        $sArticleTable = getViewName( 'oxarticles' );
-        /** @var $oArticleList oxArticleList */
-        $oArticleList = oxNew('oxArticleList');
         /** @var $oArticleBase oxArticle */
-//        $oArticleBase = $oArticleList->getBaseObject();
         $oArticleBase = oxNew('oxArticle', array('_blUseLazyLoading' => false));
 
         $oArticleBase->setSkipAbPrice(true);
         $oArticleBase->setLoadParentData(false);
         $oArticleBase->setNoVariantLoading(true);
+        return $oArticleBase;
+    }
 
+    protected function createItemsCsv()
+    {
+        $oArticleBase = $this->_getArticleBase();
+
+        $sArticleTable = $oArticleBase->getViewName();
         $sFields = $oArticleBase->getSelectFields();
         $sSqlActiveSnippet = $oArticleBase->getSqlActiveSnippet();
         $sSelect = "
