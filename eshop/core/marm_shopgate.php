@@ -110,13 +110,24 @@ class marm_shopgate
     }
 
     /**
+     * returns array of file names from shopgate framework library
+     * that has to be inlcuded
+     * @return array
+     */
+    protected function _getFilesToInclude()
+    {
+        return $this->_aFilesToInclude;
+    }
+
+    /**
      * function loads framework by including it
      * @return void
      */
     public function init()
     {
-        foreach ($this->_aFilesToInclude as $sFile) {
-            $sFile = $this->_getLibraryDir() . $sFile;
+        $sLibraryDir = $this->_getLibraryDir();
+        foreach ($this->_getFilesToInclude() as $sFile) {
+            $sFile = $sLibraryDir . $sFile;
             if (file_exists($sFile)) {
                 require_once $sFile;
             }
@@ -145,6 +156,15 @@ class marm_shopgate
     }
 
     /**
+     * returns array shopgate config name and edit type in oxid (checkbox, input)
+     * @return array
+     */
+    protected function _getConfig()
+    {
+        return $this->_aConfig;
+    }
+
+    /**
      * returns array for framework filled with values from oxid configuration.
      * @return array
      */
@@ -152,8 +172,8 @@ class marm_shopgate
     {
         $aConfig = array();
         $oConfig = oxConfig::getInstance();
-        foreach ($this->_aConfig as $sConfigKey => $sType) {
-            if ($sValue = $oConfig->getShopConfVar('marm_shopgate_'.$sConfigKey)) {
+        foreach ($this->_getConfig() as $sConfigKey => $sType) {
+            if ($sValue = $oConfig->getConfigParam('marm_shopgate_'.$sConfigKey)) {
                 $aConfig[$sConfigKey] = $sValue;
             }
         }
@@ -178,15 +198,15 @@ class marm_shopgate
         $oOxidConfig = oxConfig::getInstance();
         $this->init();
         $aShopgateConfig = ShopgateConfig::getConfig();
-        foreach ($this->_aConfig as $sConfigKey => $sType) {
+        foreach ($this->_getConfig() as $sConfigKey => $sType) {
 
             if ($sConfigKey == 'plugin')  continue;
 
-            $sValue = $oOxidConfig->getShopConfVar('marm_shopgate_'.$sConfigKey);
+            $sValue = $oOxidConfig->getConfigParam('marm_shopgate_'.$sConfigKey);
             if (!$sValue) {
                 $sValue = $aShopgateConfig[$sConfigKey];
             }
-            $aConfig[] = array (
+            $aConfig[$sConfigKey] = array (
                 'oxid_name'     => 'marm_shopgate_'.$sConfigKey,
                 'shopgate_name' => $sConfigKey,
                 'type' => $sType,
