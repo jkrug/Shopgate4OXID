@@ -101,5 +101,40 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
     }
 
+    public function test__getArticleSQL()
+    {
+        $sViewName = 'customViewName';
+        $sSelectFields = 'custom_selectFields';
+        $sSelectWhere = 'customwhere';
+        $oArticleMock = $this->getMock(
+            'oxarticle',
+            array(
+                'getViewName',
+                'getSelectFields',
+                'getSqlActiveSnippet'
+            )
+        );
+        $oArticleMock
+            ->expects($this->once())
+            ->method('getViewName')
+            ->will($this->returnValue($sViewName))
+        ;
+        $oArticleMock
+            ->expects($this->once())
+            ->method('getSelectFields')
+            ->will($this->returnValue($sSelectFields))
+        ;
+        $oArticleMock
+            ->expects($this->once())
+            ->method('getSqlActiveSnippet')
+            ->will($this->returnValue($sSelectWhere))
+        ;
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sResult = $oPlugin->_getArticleSQL($oArticleMock);
+        $this->assertTrue(strpos($sResult, $sViewName) !== false);
+        $this->assertTrue(strpos($sResult, $sSelectFields) !== false);
+        $this->assertTrue(strpos($sResult, $sSelectWhere) !== false);
+    }
+
     
 }
