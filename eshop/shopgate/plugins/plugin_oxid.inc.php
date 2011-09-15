@@ -39,28 +39,33 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $oArticleBase;
     }
 
+    /**
+     * Formats SQL from oxarticle object to load the list
+     * @param oxArticle $oArticleBase
+     * @return string
+     */
+    protected function _getArticleSQL($oArticleBase)
+    {
+        $sArticleTable = $oArticleBase->getViewName();
+        $sFields = $oArticleBase->getSelectFields();
+        $sSqlActiveSnippet = $oArticleBase->getSqlActiveSnippet();
+
+        $sSelect = " SELECT {$sFields} FROM {$sArticleTable} WHERE {$sSqlActiveSnippet} ";
+        return $sSelect;
+    }
+
     protected function createItemsCsv()
     {
         $oArticleBase = $this->_getArticleBase();
 
-        $sArticleTable = $oArticleBase->getViewName();
-        $sFields = $oArticleBase->getSelectFields();
-        $sSqlActiveSnippet = $oArticleBase->getSqlActiveSnippet();
-        $sSelect = "
-            SELECT
-              {$sFields}
-            FROM
-              {$sArticleTable}
-            WHERE
-                {$sSqlActiveSnippet}
-        ";
-        $oArticleSaved = clone $oArticleBase;
+        $sSelect = $this->_getArticleSQL($oArticleBase);
+
         $rs = oxDb::getDb(true)->Execute( $sSelect);
         $aDefaultRow = $this->buildDefaultRow();
 
         if ($rs != false && $rs->recordCount() > 0) {
             while (!$rs->EOF) {
-                $oArticle = clone $oArticleSaved;
+                $oArticle = clone $oArticleBase;
                 $oArticle->assign($rs->fields);
 
                 $aItem = $aDefaultRow;
