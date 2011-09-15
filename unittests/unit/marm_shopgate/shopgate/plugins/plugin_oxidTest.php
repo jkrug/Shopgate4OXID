@@ -41,8 +41,65 @@ require_once getShopBasePath() . 'shopgate/plugins/plugin_oxid.inc.php';
 
 class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 {
-    public function testLines()
+    protected function tearDown()
     {
-       $oObject = new ShopgatePlugin();
+        modConfig::$unitMOD = null;
+        oxTestModules::cleanUp();
     }
+    
+    public function test_startup()
+    {
+        $oConfigMock = $this->getMock(
+            'oxConfig',
+            array(
+                'getActShopCurrencyObject',
+                'getConfigParam'
+            )
+        );
+        $oConfigMock
+            ->expects($this->once())
+            ->method('getActShopCurrencyObject')
+        ;
+        $oConfigMock
+            ->expects($this->once())
+            ->method('getConfigParam')
+        ;
+        modConfig::$unitMOD = $oConfigMock;
+        $oPlugin = new ShopgatePlugin();
+        $this->assertTrue($oPlugin->startup());
+    }
+
+    public function test__getArticleBase()
+    {
+        $oArticleMock = $this->getMock(
+            'oxArticle',
+            array(
+                'setSkipAbPrice',
+                'setLoadParentData',
+                'setNoVariantLoading'
+            )
+        );
+        $oArticleMock
+            ->expects($this->once())
+            ->method('setSkipAbPrice')
+            ->with(true)
+        ;
+        $oArticleMock
+            ->expects($this->once())
+            ->method('setLoadParentData')
+            ->with(false)
+        ;
+        $oArticleMock
+            ->expects($this->once())
+            ->method('setNoVariantLoading')
+            ->with(true)
+        ;
+        oxTestModules::addModuleObject('oxArticle', $oArticleMock);
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oResult = $oPlugin->_getArticleBase();
+        $this->assertTrue($oResult instanceof oxArticle);
+
+    }
+
+    
 }
