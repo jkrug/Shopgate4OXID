@@ -373,4 +373,39 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $aItem = $oPlugin->_loadArticleExport_url_deeplink(array(), $oTestArticle);
         $this->assertEquals($sLink, $aItem['url_deeplink']);
     }
+
+    public function test__loadArticleExport_url_images()
+    {
+        $aPicGal0 = array('ZoomPic' => true,  'ZoomPics' => array(array('file'=>'img1'), array('file'=>'img2')));
+        $aPicGal1 = array('ZoomPic' => true,  'ZoomPics' => array(array('file'=>'img3')));
+        $aPicGal2 = array('ZoomPic' => false, 'ActPic'=>'img4');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array('getPictureGallery')
+        );
+        $oTestArticle
+            ->expects($this->at(0))
+            ->method('getPictureGallery')
+            ->will($this->returnValue($aPicGal0))
+        ;
+        $oTestArticle
+            ->expects($this->at(1))
+            ->method('getPictureGallery')
+            ->will($this->returnValue($aPicGal1))
+        ;
+        $oTestArticle
+            ->expects($this->at(2))
+            ->method('getPictureGallery')
+            ->will($this->returnValue($aPicGal2))
+        ;
+
+        $aItem = $oPlugin->_loadArticleExport_url_images(array(), $oTestArticle);
+        $this->assertEquals('img1||img2', $aItem['urls_images']);
+        $aItem = $oPlugin->_loadArticleExport_url_images(array(), $oTestArticle);
+        $this->assertEquals('img3', $aItem['urls_images']);
+        $aItem = $oPlugin->_loadArticleExport_url_images(array(), $oTestArticle);
+        $this->assertEquals('img4', $aItem['urls_images']);
+
+    }
 }

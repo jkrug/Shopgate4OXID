@@ -251,6 +251,14 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * loads article images. First tries to get Zoom images,
+     * if no such images, default image will be taken
+     *
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadArticleExport_url_images(array $aItem, oxArticle $oArticle)
     {
         $aPictures = array();
@@ -263,7 +271,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         else {
             $aPictures[] = $aPicGallery['ActPic'];
         }
-        $aItem['urls_images']   = implode('||', $aPictures);
+        $aItem['urls_images']   = implode(self::MULTI_SEPERATOR, $aPictures);
         return $aItem;
     }
 
