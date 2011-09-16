@@ -115,6 +115,24 @@ class ShopgatePlugin extends ShopgatePluginCore {
     {
         return round($dPrice, 2);
     }
+
+    /**
+     * loads is_available information for article.
+     * Uses oxArticle::isBuyable() logic here
+     * @param array $aItem
+     * @param oxArticle $oArticle
+     * @return array changed $aItem
+     */
+    protected function _loadIsAvailableForArticle(array $aItem, oxArticle $oArticle)
+    {
+        if ($oArticle->isBuyable()) {
+            $aItem['is_available']  = 1;
+        }
+        else {
+            $aItem['is_available']  = 0;
+        }
+        return $aItem;
+    }
     
     protected function _loadRequiredFieldsForArticle(array $aItem, oxArticle $oArticle)
     {
@@ -125,13 +143,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         $aItem = $this->_loadPicturesForArticle($aItem, $oArticle);
         $aItem = $this->_loadCategoriesForArticle($aItem, $oArticle);
-
-        if ($oArticle->isBuyable()) {
-            $aItem['is_available']  = 1;
-        }
-        else {
-            $aItem['is_available']  = 0;
-        }
+        $aItem = $this->_loadIsAvailableForArticle($aItem, $oArticle);
         $aItem = $this->_loadDeliveryTimeForArticle($aItem, $oArticle);
         $aItem = $this->_loadManufacturerForArticle($aItem, $oArticle);
         $aItem['url_deeplink']  = $oArticle->getLink();
