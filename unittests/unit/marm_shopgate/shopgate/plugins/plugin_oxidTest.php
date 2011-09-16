@@ -215,5 +215,30 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals(2.12, $oPlugin->_formatPrice(2.1159));
         $this->assertEquals(3.00, $oPlugin->_formatPrice(3));
     }
-    
+
+    public function test__loadIsAvailableForArticle()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oArticleMock = $this->getMock(
+            'oxArticle',
+            array(
+                'isBuyable'
+            )
+        );
+        $oArticleMock
+            ->expects($this->at(0))
+            ->method('isBuyable')
+            ->will($this->returnValue(true))
+        ;
+        $oArticleMock
+            ->expects($this->at(0))
+            ->method('isBuyable')
+            ->will($this->returnValue(false))
+        ;
+        $aItem = array();
+        $aItem = $oPlugin->_loadIsAvailableForArticle($aItem, $oArticleMock);
+        $this->assertEquals('1', $aItem['is_available']);
+        $aItem = $oPlugin->_loadIsAvailableForArticle($aItem, $oArticleMock);
+        $this->assertEquals('0', $aItem['is_available']);
+    }
 }
