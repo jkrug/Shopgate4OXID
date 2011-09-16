@@ -106,11 +106,21 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * formats given price to shopgate standard.
+     * @param double $dPrice
+     * @return double
+     */
+    protected function _formatPrice($dPrice)
+    {
+        return round($dPrice, 2);
+    }
+    
     protected function _loadRequiredFieldsForArticle(array $aItem, oxArticle $oArticle)
     {
         $aItem['item_number']   = $oArticle->oxarticles__oxartnum->value;
         $aItem['item_name']     = $oArticle->oxarticles__oxtitle->value;
-        $aItem['unit_amount']   = round($oArticle->getPrice()->getBruttoPrice(), 2);
+        $aItem['unit_amount']   = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice());
         $aItem['description']   = $oArticle->getLongDesc();
 
         $aItem = $this->_loadPicturesForArticle($aItem, $oArticle);
@@ -258,13 +268,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $aItem['manufacturer_item_number'] = $oArticle->oxarticles__oxmpn->value;
         $aItem['currency'] = $this->_sCurrency;
         $aItem['tax_percent'] = $oArticle->getArticleVat();
-        $aItem['msrp'] = round($oArticle->getTPrice()->getBruttoPrice(), 2);
+        $aItem['msrp'] = $this->_formatPrice($oArticle->getTPrice()->getBruttoPrice());
 
 //        $aItem['shipping_costs_per_order'] = $oArticle->oxarticles__ox->value;
 //        $aItem['additional_shipping_costs_per_unit'] = $oArticle->oxarticles__ox->value;
 
         if ((double) $oArticle->oxarticles__oxunitquantity->value && $oArticle->oxarticles__oxunitname->value) {
-            $aItem['basic_price'] = round($oArticle->getPrice()->getBruttoPrice() / (double) $oArticle->oxarticles__oxunitquantity->value, 2);
+            $aItem['basic_price'] = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice() / (double) $oArticle->oxarticles__oxunitquantity->value);
         }
         else {
             $aItem['basic_price'] = '';
