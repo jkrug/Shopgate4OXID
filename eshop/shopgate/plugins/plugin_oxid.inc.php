@@ -275,7 +275,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
-
+    /**
+     * Loads categories to which article belongs
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadArticleExport_categories(array $aItem, oxArticle $oArticle)
     {
         $aCategoriesPath = $this->_getCategoriesPath();

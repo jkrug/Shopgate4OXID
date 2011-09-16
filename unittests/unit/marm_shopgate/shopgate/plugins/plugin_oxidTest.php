@@ -406,6 +406,37 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('img3', $aItem['urls_images']);
         $aItem = $oPlugin->_loadArticleExport_url_images(array(), $oTestArticle);
         $this->assertEquals('img4', $aItem['urls_images']);
+    }
 
+    public function test__loadArticleExport_categories()
+    {
+        $aArticleCats = array('cat1', 'cat3', 'cat4');
+        $aCatPaths = array(
+            'cat1' => 'main=>sub1',
+            'cat2' => 'main2=>sub2',
+            'cat3' => 'main3=>sub3=>sub4'
+        );
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getCategoriesPath'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getCategoriesPath')
+            ->will($this->returnValue($aCatPaths))
+        ;
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array('getCategoryIds')
+        );
+        $oTestArticle
+            ->expects($this->once())
+            ->method('getCategoryIds')
+            ->will($this->returnValue($aArticleCats))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_categories(array(), $oTestArticle);
+        $this->assertEquals('main=>sub1||main3=>sub3=>sub4', $aItem['categories']);
     }
 }
