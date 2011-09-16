@@ -11,7 +11,18 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected $_sCurrency = 'EUR';
     protected $_blOxidUsesStock = true;
 
-    
+    /**
+     * stores main loaders for article export
+     * @var array
+     */
+    protected $_aMainItemLoaders = array(
+        '_loadRequiredFieldsForArticle',
+        '_loadAdditionalFieldsForArticle',
+        '_loadSelectionListForArticle',
+        '_loadVariantsInfoForArticle',
+        '_loadPersParamForArticle'
+    );
+
     /**
      * loads variables that are used in runtime
      * @return bool true
@@ -65,9 +76,10 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         $sSelect = $this->_getArticleSQL($oArticleBase);
 
-        $rs = oxDb::getDb(true)->Execute( $sSelect);
         $aDefaultRow = $this->buildDefaultRow();
+        $aMainLoaders = $this->_getMainItemLoaders();
 
+        $rs = oxDb::getDb(true)->Execute( $sSelect);
         if ($rs != false && $rs->recordCount() > 0) {
             while (!$rs->EOF) {
                 $oArticle = clone $oArticleBase;
@@ -75,7 +87,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
                 $aItem = $aDefaultRow;
 
-                $this->_loadFieldsForArticle($aItem, $oArticle);
+                $aItem = $this->_executeLoaders($aMainLoaders, $aItem, $oArticle);
 
                 $oArticle = null;
                 $rs->moveNext();
@@ -85,25 +97,31 @@ class ShopgatePlugin extends ShopgatePluginCore {
     }
 
     /**
-     * executes load chain for given article:
-     *  - required fields
-     *  - additional fields
-     *  - selection list fields
-     *  - variant fields
-     *  - persistent param fields
+     * executes given functions, to fulfill $aItem.
      *
-     * @param array $aItem
-     * @param oxArticle $oArticle
+     * @param array $aLoaders method names in this class
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _executeLoaders(array $aLoaders, array $aItem, oxArticle $oArticle)
+    {
+        foreach ($aLoaders as $sMethod) {
+            if (method_exists($this, $sMethod)) {
+                $aItem = $this->{$sMethod}($aItem, $oArticle);
+            }
+        }
+        return $aItem;
+    }
+
+    /**
+     * returns main loaders for article export
+     * @see self::$_aMainItemLoaders
      * @return array
      */
-    protected function _loadFieldsForArticle(array $aItem, oxArticle $oArticle)
+    protected function _getMainItemLoaders()
     {
-        $aItem = $this->_loadRequiredFieldsForArticle($aItem, $oArticle);
-        $aItem = $this->_loadAdditionalFieldsForArticle($aItem, $oArticle);
-        $aItem = $this->_loadSelectionListForArticle($aItem, $oArticle);
-        $aItem = $this->_loadVariantsInfoForArticle($aItem, $oArticle);
-        $aItem = $this->_loadPersParamForArticle($aItem, $oArticle);
-        return $aItem;
+        return $this->_aMainItemLoaders;
     }
 
     /**

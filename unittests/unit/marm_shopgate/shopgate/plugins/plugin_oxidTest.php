@@ -146,7 +146,8 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
                 '_getArticleBase',
                 '_getArticleSQL',
                 'buildDefaultRow',
-                '_loadFieldsForArticle',
+                '_getMainItemLoaders',
+                '_executeLoaders',
                 'addItem'
             )
         );
@@ -167,8 +168,13 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->will($this->returnValue(array()))
         ;
         $oPlugin
+            ->expects($this->once())
+            ->method('_getMainItemLoaders')
+            ->will($this->returnValue(array()))
+        ;
+        $oPlugin
             ->expects($this->exactly(2))
-            ->method('_loadFieldsForArticle')
+            ->method('_executeLoaders')
         ;
         $oPlugin
             ->expects($this->exactly(2))
@@ -178,34 +184,50 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
     }
 
-    public function test__loadFieldsForArticle()
+    public function test__executeLoaders()
     {
-        $aChain = array(
-            '_loadRequiredFieldsForArticle',
-            '_loadAdditionalFieldsForArticle',
-            '_loadSelectionListForArticle',
-            '_loadVariantsInfoForArticle',
-            '_loadPersParamForArticle'
-        );
-        $oPlugin = $this->getMock(
-            $this->getProxyClassName('ShopgatePlugin'),
-            $aChain
+        $aTestMethods = array(
+            'test1',
+            'test2'
         );
         $oArticle = oxNew('oxArticle');
-        $iChainNumber = 1;
+        $oPluginMock = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            $aTestMethods
+        );
+        $iChainNumber = 0;
+        $aInputArray = array();
         $aOutputArray = array();
-        foreach ($aChain as $sMethod) {
-            $aInputArray = $aOutputArray;
-            $aOutputArray[] = $iChainNumber++;
-            $oPlugin
-                ->expects($this->once())
-                ->method($sMethod)
-                ->with($aInputArray, $oArticle)
-                ->will($this->returnValue($aOutputArray))
-            ;
-        }
+        $aOutputArray[] = $iChainNumber++;
+        $oPluginMock
+            ->expects($this->once())
+            ->method('test1')
+            ->with($aInputArray, $oArticle)
+            ->will($this->returnValue($aOutputArray))
+        ;
+        $aInputArray = $aOutputArray;
+        $aOutputArray[] = $iChainNumber++;
+        $oPluginMock
+            ->expects($this->once())
+            ->method('test2')
+            ->with($aInputArray, $oArticle)
+            ->will($this->returnValue($aOutputArray))
+        ;
+        $aItems = $oPluginMock->_executeLoaders($aTestMethods, array(), $oArticle);
+        $this->assertType('array', $aItems);
+        $this->assertEquals($aOutputArray, $aItems);
 
-        $this->assertEquals($aOutputArray, $oPlugin->_loadFieldsForArticle(array(), $oArticle));
+    }
+
+    public function test__getMainItemLoaders()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aResult = $oPlugin->_getMainItemLoaders();
+        $this->assertContains('_loadRequiredFieldsForArticle', $aResult);
+        $this->assertContains('_loadAdditionalFieldsForArticle', $aResult);
+        $this->assertContains('_loadSelectionListForArticle', $aResult);
+        $this->assertContains('_loadVariantsInfoForArticle', $aResult);
+        $this->assertContains('_loadPersParamForArticle', $aResult);
     }
 
     public function test__formatPrice()
