@@ -258,9 +258,20 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->will($this->returnValue(false))
         ;
         $aItem = array();
-        $aItem = $oPlugin->_loadIsAvailableForArticle($aItem, $oArticleMock);
+        $aItem = $oPlugin->_loadArticleExport_is_available($aItem, $oArticleMock);
         $this->assertEquals('1', $aItem['is_available']);
-        $aItem = $oPlugin->_loadIsAvailableForArticle($aItem, $oArticleMock);
+        $aItem = $oPlugin->_loadArticleExport_is_available($aItem, $oArticleMock);
         $this->assertEquals('0', $aItem['is_available']);
     }
+//    public function test__loadRequiredFieldsForArticle()
+//    {
+//        $aExternalLoaders = array(
+//            '_loadPicturesForArticle',
+//            '_loadCategoriesForArticle',
+//            '_loadIsAvailableForArticle',
+//            '_loadDeliveryTimeForArticle',
+//            '_loadManufacturerForArticle'
+//        );
+//
+//    }
 }

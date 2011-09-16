@@ -141,7 +141,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * @param oxArticle $oArticle
      * @return array changed $aItem
      */
-    protected function _loadIsAvailableForArticle(array $aItem, oxArticle $oArticle)
+    protected function _loadArticleExport_is_available(array $aItem, oxArticle $oArticle)
     {
         if ($oArticle->isBuyable()) {
             $aItem['is_available']  = 1;
@@ -159,17 +159,17 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $aItem['unit_amount']   = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice());
         $aItem['description']   = $oArticle->getLongDesc();
 
-        $aItem = $this->_loadPicturesForArticle($aItem, $oArticle);
-        $aItem = $this->_loadCategoriesForArticle($aItem, $oArticle);
-        $aItem = $this->_loadIsAvailableForArticle($aItem, $oArticle);
-        $aItem = $this->_loadDeliveryTimeForArticle($aItem, $oArticle);
-        $aItem = $this->_loadManufacturerForArticle($aItem, $oArticle);
+        $aItem = $this->_loadArticleExport_url_images($aItem, $oArticle);
+        $aItem = $this->_loadArticleExport_categories($aItem, $oArticle);
+        $aItem = $this->_loadArticleExport_is_available($aItem, $oArticle);
+        $aItem = $this->_loadArticleExport_available_text($aItem, $oArticle);
+        $aItem = $this->_loadArticleExport_manufacturer($aItem, $oArticle);
         $aItem['url_deeplink']  = $oArticle->getLink();
 
         return $aItem;
     }
 
-    protected function _loadPicturesForArticle(array $aItem, oxArticle $oArticle)
+    protected function _loadArticleExport_url_images(array $aItem, oxArticle $oArticle)
     {
         $aPictures = array();
         $aPicGallery = $oArticle->getPictureGallery();
@@ -186,7 +186,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     }
 
 
-    protected function _loadCategoriesForArticle(array $aItem, oxArticle $oArticle)
+    protected function _loadArticleExport_categories(array $aItem, oxArticle $oArticle)
     {
         $aCategoriesPath = $this->_getCategoriesPath();
         $aCategories = array();
@@ -229,7 +229,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         }
         return $this->_aCategoriesPath;
     }
-    protected function _loadManufacturerForArticle(array $aItem, oxArticle $oArticle)
+    protected function _loadArticleExport_manufacturer(array $aItem, oxArticle $oArticle)
     {
         $aItem['manufacturer'] = '';
         $sManufacturerId = $oArticle->oxarticles__oxmanufacturerid->value;
@@ -265,7 +265,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $this->_aManufacturers;
     }
 
-    protected function _loadDeliveryTimeForArticle(array $aItem, oxArticle $oArticle)
+    protected function _loadArticleExport_available_text(array $aItem, oxArticle $oArticle)
     {
         $sMinTime = $oArticle->oxarticles__oxmindeltime->value;
         $sMaxTime = $oArticle->oxarticles__oxmaxdeltime->value;
