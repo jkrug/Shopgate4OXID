@@ -207,5 +207,13 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
         $this->assertEquals($aOutputArray, $oPlugin->_loadFieldsForArticle(array(), $oArticle));
     }
+
+    public function test__formatPrice()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertEquals(1.11, $oPlugin->_formatPrice(1.1111111));
+        $this->assertEquals(2.12, $oPlugin->_formatPrice(2.1159));
+        $this->assertEquals(3.00, $oPlugin->_formatPrice(3));
+    }
     
 }
