@@ -24,6 +24,24 @@ class ShopgatePlugin extends ShopgatePluginCore {
     );
 
     /**
+     * stores required field loaders for article export
+     * @var array
+     */
+    protected $_aRequiredItemFieldLoaders = array(
+        '_loadArticleExport_item_number',
+        '_loadArticleExport_item_name',
+        '_loadArticleExport_unit_amount',
+        '_loadArticleExport_description',
+        '_loadArticleExport_url_images',
+        '_loadArticleExport_categories',
+        '_loadArticleExport_is_available',
+        '_loadArticleExport_available_text',
+        '_loadArticleExport_manufacturer',
+        '_loadArticleExport_url_deeplink'
+    );
+
+
+    /**
      * loads variables that are used in runtime
      * @return bool true
      */
@@ -125,6 +143,16 @@ class ShopgatePlugin extends ShopgatePluginCore {
     }
 
     /**
+     * returns required field loaders for article export
+     * @see self::$_aRequiredItemFieldLoaders
+     * @return array
+     */
+    protected function _getRequiredItemFieldLoaders()
+    {
+        return $this->_aRequiredItemFieldLoaders;
+    }
+
+    /**
      * formats given price to shopgate standard.
      * @param double $dPrice
      * @return double
@@ -137,8 +165,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
     /**
      * loads is_available information for article.
      * Uses oxArticle::isBuyable() logic here
-     * @param array $aItem
-     * @param oxArticle $oArticle
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
      * @return array changed $aItem
      */
     protected function _loadArticleExport_is_available(array $aItem, oxArticle $oArticle)
@@ -151,21 +179,75 @@ class ShopgatePlugin extends ShopgatePluginCore {
         }
         return $aItem;
     }
-    
+
+    /**
+     * loads required fields from oxarticle object
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadRequiredFieldsForArticle(array $aItem, oxArticle $oArticle)
     {
+        return $this->_executeLoaders($this->_getRequiredItemFieldLoaders(), $aItem, $oArticle);
+    }
+
+    /**
+     * article number. used oxarticles__oxartnum
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_item_number(array $aItem, oxArticle $oArticle)
+    {
         $aItem['item_number']   = $oArticle->oxarticles__oxartnum->value;
+        return $aItem;
+    }
+
+    /**
+     * article title.
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_item_name(array $aItem, oxArticle $oArticle)
+    {
         $aItem['item_name']     = $oArticle->oxarticles__oxtitle->value;
+        return $aItem;
+    }
+
+    /**
+     * article price
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_unit_amount(array $aItem, oxArticle $oArticle)
+    {
         $aItem['unit_amount']   = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice());
+        return $aItem;
+    }
+
+    /**
+     * article long description
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_description(array $aItem, oxArticle $oArticle)
+    {
         $aItem['description']   = $oArticle->getLongDesc();
+        return $aItem;
+    }
 
-        $aItem = $this->_loadArticleExport_url_images($aItem, $oArticle);
-        $aItem = $this->_loadArticleExport_categories($aItem, $oArticle);
-        $aItem = $this->_loadArticleExport_is_available($aItem, $oArticle);
-        $aItem = $this->_loadArticleExport_available_text($aItem, $oArticle);
-        $aItem = $this->_loadArticleExport_manufacturer($aItem, $oArticle);
+    /**
+     * article main link
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_url_deeplink(array $aItem, oxArticle $oArticle)
+    {
         $aItem['url_deeplink']  = $oArticle->getLink();
-
         return $aItem;
     }
 

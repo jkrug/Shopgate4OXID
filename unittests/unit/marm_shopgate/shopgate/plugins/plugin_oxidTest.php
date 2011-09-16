@@ -263,15 +263,114 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $aItem = $oPlugin->_loadArticleExport_is_available($aItem, $oArticleMock);
         $this->assertEquals('0', $aItem['is_available']);
     }
-//    public function test__loadRequiredFieldsForArticle()
-//    {
-//        $aExternalLoaders = array(
-//            '_loadPicturesForArticle',
-//            '_loadCategoriesForArticle',
-//            '_loadIsAvailableForArticle',
-//            '_loadDeliveryTimeForArticle',
-//            '_loadManufacturerForArticle'
-//        );
-//
-//    }
+
+    public function test__getRequiredItemFieldLoaders()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aResult = $oPlugin->_getRequiredItemFieldLoaders();
+        $this->assertContains('_loadArticleExport_item_number', $aResult);
+        $this->assertContains('_loadArticleExport_item_name', $aResult);
+        $this->assertContains('_loadArticleExport_unit_amount', $aResult);
+        $this->assertContains('_loadArticleExport_description', $aResult);
+        $this->assertContains('_loadArticleExport_url_images', $aResult);
+        $this->assertContains('_loadArticleExport_categories', $aResult);
+        $this->assertContains('_loadArticleExport_is_available', $aResult);
+        $this->assertContains('_loadArticleExport_available_text', $aResult);
+        $this->assertContains('_loadArticleExport_manufacturer', $aResult);
+        $this->assertContains('_loadArticleExport_url_deeplink', $aResult);
+    }
+
+    public function test__loadRequiredFieldsForArticle()
+    {
+        $aOutput = array('ok');
+        $aTestArticle = oxNew('oxArticle');
+        $aTestLoaders = array('test1', 'test2', 'test3');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_executeLoaders',
+                '_getRequiredItemFieldLoaders'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getRequiredItemFieldLoaders')
+            ->will($this->returnValue($aTestLoaders))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_executeLoaders')
+            ->with($aTestLoaders, array(), $aTestArticle)
+            ->will($this->returnValue($aOutput))
+        ;
+        $this->assertEquals($aOutput, $oPlugin->_loadRequiredFieldsForArticle(array(), $aTestArticle));
+    }
+
+    public function test__loadArticleExport_item_number()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sArtNum = 'a123_1-2';
+        $oTestArticle->oxarticles__oxartnum = new oxField($sArtNum, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_item_number(array(), $oTestArticle);
+        $this->assertEquals($sArtNum, $aItem['item_number']);
+    }
+
+    public function test__loadArticleExport_item_name()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sTitle = 'a123_1-2';
+        $oTestArticle->oxarticles__oxtitle = new oxField($sTitle, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_item_name(array(), $oTestArticle);
+        $this->assertEquals($sTitle, $aItem['item_name']);
+    }
+
+    public function test__loadArticleExport_unit_amount()
+    {
+        /** @var $oTestArticle oxArticle */
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        /** @var $oPrice oxprice */
+        $oPrice = oxNew('oxPrice');
+        $oPrice->setPrice(12.345);
+        $oTestArticle->setPrice($oPrice);
+        $aItem = $oPlugin->_loadArticleExport_unit_amount(array(), $oTestArticle);
+        $this->assertEquals(12.35, $aItem['unit_amount']);
+    }
+
+    public function test__loadArticleExport_description()
+    {
+        $sLongDesc = "some text here";
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array('getLongDesc')
+        );
+        $oTestArticle
+            ->expects($this->once())
+            ->method('getLongDesc')
+            ->will($this->returnValue($sLongDesc))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_description(array(), $oTestArticle);
+        $this->assertEquals($sLongDesc, $aItem['description']);
+    }
+
+    public function test__loadArticleExport_url_deeplink()
+    {
+        $sLink = "http://testing.ln/";
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array('getLink')
+        );
+        $oTestArticle
+            ->expects($this->once())
+            ->method('getLink')
+            ->will($this->returnValue($sLink))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_url_deeplink(array(), $oTestArticle);
+        $this->assertEquals($sLink, $aItem['url_deeplink']);
+    }
 }
