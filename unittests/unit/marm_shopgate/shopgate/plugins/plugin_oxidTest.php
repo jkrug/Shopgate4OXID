@@ -657,7 +657,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertContains('_loadArticleExport_block_pricing', $aResult);
     }
 
-    public function _loadAdditionalFieldsForArticle()
+    public function test__loadAdditionalFieldsForArticle()
     {
         $aOutput = array('ok');
         $aTestArticle = oxNew('oxArticle');
@@ -680,6 +680,16 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->with($aTestLoaders, array(), $aTestArticle)
             ->will($this->returnValue($aOutput))
         ;
-        $this->assertEquals($aOutput, $oPlugin->_loadRequiredFieldsForArticle(array(), $aTestArticle));
+        $this->assertEquals($aOutput, $oPlugin->_loadAdditionalFieldsForArticle(array(), $aTestArticle));
+    }
+
+    public function test__loadArticleExport_manufacturer_item_number()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sValue = 'd112_31-2';
+        $oTestArticle->oxarticles__oxmpn = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_manufacturer_item_number(array(), $oTestArticle);
+        $this->assertEquals($sValue, $aItem['manufacturer_item_number']);
     }
 }
