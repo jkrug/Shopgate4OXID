@@ -52,14 +52,9 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oConfigMock = $this->getMock(
             'oxConfig',
             array(
-                'getActShopCurrencyObject',
                 'getConfigParam'
             )
         );
-        $oConfigMock
-            ->expects($this->once())
-            ->method('getActShopCurrencyObject')
-        ;
         $oConfigMock
             ->expects($this->once())
             ->method('getConfigParam')
@@ -691,5 +686,35 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oTestArticle->oxarticles__oxmpn = new oxField($sValue, oxField::T_RAW);
         $aItem = $oPlugin->_loadArticleExport_manufacturer_item_number(array(), $oTestArticle);
         $this->assertEquals($sValue, $aItem['manufacturer_item_number']);
+    }
+
+    public function test__getActiveCurrency()
+    {
+        $oConfigMock = $this->getMock(
+            'oxConfig',
+            array(
+                'getActShopCurrencyObject',
+            )
+        );
+        $oCur1 = new stdClass();
+        $oCur1->name = 'EUR';
+        $oCur2 = new stdClass();
+        $oCur2->name = 'USD';
+
+        $oConfigMock
+            ->expects($this->at(0))
+            ->method('getActShopCurrencyObject')
+            ->will($this->returnValue($oCur1))
+        ;
+        $oConfigMock
+            ->expects($this->at(1))
+            ->method('getActShopCurrencyObject')
+            ->will($this->returnValue($oCur2))
+        ;
+        modConfig::$unitMOD = $oConfigMock;
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertEquals($oCur1->name, $oPlugin->_getActiveCurrency());
+        $this->assertEquals($oCur1->name, $oPlugin->_getActiveCurrency());
+        $this->assertEquals($oCur2->name, $oPlugin->_getActiveCurrency(true));
     }
 }

@@ -8,7 +8,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
     protected $_sVariantSeparator = " | ";
 
-    protected $_sCurrency = 'EUR';
+    /**
+     * stores active currency name.
+     * example: EUR
+     * @var string
+     */
+    protected $_sCurrency = null;
+    
     protected $_blOxidUsesStock = true;
 
     /**
@@ -78,8 +84,6 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     public function startup()
     {
-        $oCur = oxConfig::getInstance()->getActShopCurrencyObject();
-        $this->_sCurrency = $oCur->name;
         $this->_blOxidUsesStock = oxConfig::getInstance()->getConfigParam( 'blUseStock' );
         return true;
     }
@@ -495,7 +499,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     protected function _loadArticleExport_currency(array $aItem, oxArticle $oArticle)
     {
-        $aItem['currency']  = $this->_sCurrency;
+        $aItem['currency']  = $this->_getActiveCurrency();
         return $aItem;
     }
 
@@ -1044,5 +1048,22 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $sArticleTable = getViewName('oxarticles');
         $sArticleId = oxDb::getDb()->getOne("SELECT oxid FROM {$sArticleTable} WHERE oxartnum = ?", array($sArticleNumber));
         return oxNewArticle($sArticleId);
+    }
+
+    /**
+     * returns active currency name
+     * example: EUR
+     * @param bool $blReset
+     * @return string
+     */
+    protected function _getActiveCurrency($blReset = false)
+    {
+        if ($this->_sCurrency !== null && !$blReset) {
+            return $this->_sCurrency;
+        }
+        $oCur = oxConfig::getInstance()->getActShopCurrencyObject();
+        $this->_sCurrency = $oCur->name;
+        return $this->_sCurrency;
+
     }
 }
