@@ -569,4 +569,32 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($aManufacturers['man1'], $aItem['manufacturer']);
 
     }
+
+    public function test__getManufacturers()
+    {
+        $sLangTag = '_2';
+        $aExpectedOutput = array('this', 'is', 'mock');
+        $sTitleField = 'OXTITLE'.$sLangTag;
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getLanguageTagForTable',
+                '_dbGetAll'
+            )
+        );
+        $oPlugin
+            ->expects($this->exactly(2))
+            ->method('_getLanguageTagForTable')
+            ->will($this->returnValue($sLangTag))
+        ;
+        $oPlugin
+            ->expects($this->exactly(2))
+            ->method('_dbGetAll')
+            ->with($this->stringContains('oxmanufacturers'))
+            ->will($this->returnValue($aExpectedOutput))
+        ;
+        $this->assertEquals($aExpectedOutput, $oPlugin->_getManufacturers());
+        $this->assertEquals($aExpectedOutput, $oPlugin->_getManufacturers());
+        $this->assertEquals($aExpectedOutput, $oPlugin->_getManufacturers(true));
+    }
 }

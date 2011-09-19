@@ -48,6 +48,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected $_aCategoriesPath = null;
 
     /**
+     * stores associated array with manufacturers id and names
+     * array(OXID=>oxtitle, OXID=>oxtitle)
+     * @var array
+     */
+    protected $_aManufacturers = null;
+
+    /**
      * loads variables that are used in runtime
      * @return bool true
      */
@@ -376,7 +383,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
-    protected $_aManufacturers = null;
+    /**
+     * returns  associated array with manufacturers id and names
+     * array(OXID=>oxtitle, OXID=>oxtitle)
+     * @param bool $blReset reload from DB
+     * @return array
+     */
     protected function _getManufacturers($blReset = false)
     {
         if ($this->_aManufacturers !== null && !$blReset) {
@@ -385,17 +397,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $sManufacturersTable = getViewName('oxmanufacturers');
         $sLangTag = $this->_getLanguageTagForTable($sManufacturersTable);
         $sTitleField = 'OXTITLE'.$sLangTag;
-        $sSQL = "
-            SELECT
-              OXID,
-              {$sTitleField} as OXTITLE
-            FROM
-              {$sManufacturersTable}
-        ";
-        $this->_aManufacturers = oxDb::getDb(true)->GetAssoc($sSQL);
-        if (!$this->_aManufacturers) {
-            $this->_aManufacturers = array();
-        }
+        $sSQL = " SELECT OXID, {$sTitleField} as OXTITLE FROM {$sManufacturersTable} ";
+        $this->_aManufacturers = $this->_dbGetAll($sSQL);
         return $this->_aManufacturers;
     }
 
