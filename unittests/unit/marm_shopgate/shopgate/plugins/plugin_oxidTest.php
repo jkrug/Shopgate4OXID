@@ -885,6 +885,20 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals(2300, $aItem['weight']);
     }
 
+    public function test__loadArticleExport_is_free_shipping()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sValue = '1';
+        $oTestArticle->oxarticles__oxfreeshipping = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_is_free_shipping(array(), $oTestArticle);
+        $this->assertEquals($sValue, $aItem['is_free_shipping']);
+        $sValue = '0';
+        $oTestArticle->oxarticles__oxfreeshipping = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_is_free_shipping(array(), $oTestArticle);
+        $this->assertEquals($sValue, $aItem['is_free_shipping']);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
