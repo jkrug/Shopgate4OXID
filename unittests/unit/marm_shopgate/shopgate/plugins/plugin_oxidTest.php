@@ -439,4 +439,101 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $aItem = $oPlugin->_loadArticleExport_categories(array(), $oTestArticle);
         $this->assertEquals('main=>sub1||main3=>sub3=>sub4', $aItem['categories']);
     }
+
+    public function test__getCategoriesPath()
+    {
+        $aCats0 = array(
+            array(
+                'OXID' => 'c1',
+                'OXTITLE' => 'cat1',
+                'OXPARENTID' => 'oxrootid'
+            ),
+            array(
+                'OXID' => 'c2',
+                'OXTITLE' => 'cat2',
+                'OXPARENTID' => 'c1'
+            ),
+            array(
+                'OXID' => 'c3',
+                'OXTITLE' => 'cat3',
+                'OXPARENTID' => 'c1'
+            ),
+            array(
+                'OXID' => 'c4',
+                'OXTITLE' => 'cat4',
+                'OXPARENTID' => 'c2'
+            ),
+            array(
+                'OXID' => 'c5',
+                'OXTITLE' => 'cat5',
+                'OXPARENTID' => 'oxrootid'
+            )
+        );
+        $aCats1 = array();
+        $aExpected0 = array(
+            'c1' => 'cat1',
+            'c2' => 'cat1=>cat2',
+            'c3' => 'cat1=>cat3',
+            'c4' => 'cat1=>cat2=>cat4',
+            'c5' => 'cat5',
+        );
+        $aExpected1 = array();
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getCategoriesPathFromDB'
+            )
+        );
+        $oPlugin
+            ->expects($this->at(0))
+            ->method('_getCategoriesPathFromDB')
+            ->will($this->returnValue($aCats0))
+        ;
+        $oPlugin
+            ->expects($this->at(1))
+            ->method('_getCategoriesPathFromDB')
+            ->will($this->returnValue($aCats1))
+        ;
+        $this->assertEquals($aExpected0, $oPlugin->_getCategoriesPath());
+        // caching
+        $this->assertEquals($aExpected0, $oPlugin->_getCategoriesPath());
+        // reset caching
+        $this->assertEquals($aExpected1, $oPlugin->_getCategoriesPath(true));
+    }
+
+    public function test__getCategoriesPathFromDB()
+    {
+        $sLangTag = '_2';
+        $aExpectedOutput = array('this', 'is', 'mock');
+        $sTitleField = 'OXTITLE'.$sLangTag;
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getLanguageTagForTable',
+                '_dbGetAll'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getLanguageTagForTable')
+            ->will($this->returnValue($sLangTag))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_dbGetAll')
+            ->with($this->stringContains($sTitleField))
+            ->will($this->returnValue($aExpectedOutput))
+        ;
+        $this->assertEquals($aExpectedOutput, $oPlugin->_getCategoriesPathFromDB());
+    }
+
+    public function test__dbGetAll()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sSQL = 'SELECT ? AS column_name';
+        $this->assertEquals(array(array('column_name'=>'value')), $oPlugin->_dbGetAll($sSQL, array('value')));
+
+        $sSQL = 'error';
+        $this->assertEquals(array(), $oPlugin->_dbGetAll($sSQL));
+    }
 }

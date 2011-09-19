@@ -40,6 +40,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         '_loadArticleExport_url_deeplink'
     );
 
+    /**
+     * associated array of categories paths
+     * array(category id => category path)
+     * @var array
+     */
+    protected $_aCategoriesPath = null;
 
     /**
      * loads variables that are used in runtime
@@ -294,27 +300,20 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
-    protected $_aCategoriesPath = null;
+    /**
+     * returns associated array of categories path
+     * array(category id => category path)
+     * @param bool $blReset reload list again from DB
+     * @return array
+     */
     protected function _getCategoriesPath($blReset = false)
     {
         if ($this->_aCategoriesPath !== null && !$blReset) {
             return $this->_aCategoriesPath;
         }
-        $sCategoriesTable = getViewName('oxcategories');
-        $sLangTag = $this->_getLanguageTagForTable($sCategoriesTable);
-        $sTitleField = 'OXTITLE'.$sLangTag;
-        $sSQL = "
-            SELECT
-              OXID,
-              {$sTitleField} as OXTITLE,
-              OXPARENTID
-            FROM
-              {$sCategoriesTable}
-            ORDER BY
-              OXLEFT
-        ";
-        $aSqlRes = oxDb::getDb(true)->getAll($sSQL);
-        foreach($aSqlRes as $aRes) {
+        $this->_aCategoriesPath = array();
+
+        foreach($this->_getCategoriesPathFromDB() as $aRes) {
 
             $sPath = '';
             if ($aRes['OXPARENTID'] != 'oxrootid') {
@@ -324,6 +323,39 @@ class ShopgatePlugin extends ShopgatePluginCore {
         }
         return $this->_aCategoriesPath;
     }
+
+    /**
+     * Formats SQL, and returns results from DB in format:
+     * array(array(OXID=>oxid, OXTITLE=>catname, OXPARENTID=>oxid), array(..)..)
+     * @return array
+     */
+    protected function _getCategoriesPathFromDB()
+    {
+        /** @var $oCategory oxCategory */
+        $oCategory = oxNew('oxCategory');
+        $sCategoriesTable = $oCategory->getViewName();
+        $sLangTag = $this->_getLanguageTagForTable($sCategoriesTable);
+        $sTitleField = 'OXTITLE'.$sLangTag;
+        $sSQL = " SELECT  OXID, {$sTitleField} as OXTITLE, OXPARENTID FROM {$sCategoriesTable} ORDER BY OXLEFT ";
+        return $this->_dbGetAll($sSQL);
+    }
+
+    /**
+     * db wrapper. Passes variables to mysql_driver_ADOConnection::GetAll().
+     * if result != true, returns empty array
+     * @param $sSQL
+     * @param array $aParams
+     * @return array
+     */
+    protected function _dbGetAll($sSQL, $aParams = array())
+    {
+        $aSqlRes = oxDb::getDb(true)->getAll($sSQL, $aParams);
+        if (!$aSqlRes) {
+            $aSqlRes = array();
+        }
+        return $aSqlRes;
+    }
+
     protected function _loadArticleExport_manufacturer(array $aItem, oxArticle $oArticle)
     {
         $aItem['manufacturer'] = '';
