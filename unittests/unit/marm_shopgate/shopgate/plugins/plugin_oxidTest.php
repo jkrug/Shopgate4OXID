@@ -812,9 +812,16 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oPlugin->startup();
         $aItem = $oPlugin->_loadArticleExport_use_stock(array(), $oTestArticle);
         $this->assertEquals(0, $aItem['use_stock']);
+    }
 
-
-
+    public function test__loadArticleExport_stock_quantity()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sValue = 12;
+        $oTestArticle->oxarticles__oxstock = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_stock_quantity(array(), $oTestArticle);
+        $this->assertEquals($sValue, $aItem['stock_quantity']);
     }
 
     public function test__getActiveCurrency()
