@@ -708,6 +708,23 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sTestCur, $aItem['currency']);
     }
 
+    public function test__loadArticleExport_tax_percent()
+    {
+        $sVat = "18.50";
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array('getArticleVat')
+        );
+        $oTestArticle
+            ->expects($this->once())
+            ->method('getArticleVat')
+            ->will($this->returnValue($sVat))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_tax_percent(array(), $oTestArticle);
+        $this->assertEquals($sVat, $aItem['tax_percent']);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
