@@ -40,6 +40,24 @@ class ShopgatePlugin extends ShopgatePluginCore {
         '_loadArticleExport_url_deeplink'
     );
 
+    protected $_aAdditionalItemFieldLoaders = array(
+        '_loadArticleExport_properties',
+        '_loadArticleExport_manufacturer_item_number',
+        '_loadArticleExport_currency',
+        '_loadArticleExport_tax_percent',
+        '_loadArticleExport_msrp',
+        '_loadArticleExport_basic_price',
+        '_loadArticleExport_use_stock',
+        '_loadArticleExport_stock_quantity',
+        '_loadArticleExport_ean',
+        '_loadArticleExport_last_update',
+        '_loadArticleExport_tags',
+        '_loadArticleExport_marketplace',
+        '_loadArticleExport_weight',
+        '_loadArticleExport_is_free_shipping',
+        '_loadArticleExport_block_pricing'
+    );
+
     /**
      * associated array of categories paths
      * array(category id => category path)
@@ -402,6 +420,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $this->_aManufacturers;
     }
 
+    /**
+     * Loads delivery time in text format for article
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadArticleExport_available_text(array $aItem, oxArticle $oArticle)
     {
         $sMinTime = $oArticle->oxarticles__oxmindeltime->value;
@@ -417,8 +441,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
         if ($sMaxTime > 1 || $sMinTime > 1) {
             $sTranslateIdent .='S';
         }
-        $sText .= ' '.$this->_getTranslation(
-            $sTranslateIdent,
+        $sText .= ' ';
+        $sText .= $this->_getTranslation( $sTranslateIdent,
             array(
                  'PAGE_DETAILS_DELIVERYTIME_'.$sTranslateIdent,
                  'DETAILS_'.$sTranslateIdent
@@ -429,47 +453,201 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * returns required field loaders for article export
+     * @see self::$_aAdditionalItemFieldLoaders
+     * @return array
+     */
+    protected function _getAdditionalItemFieldLoaders()
+    {
+        return $this->_aAdditionalItemFieldLoaders;
+    }
+
+    /**
+     * loads required fields from oxarticle object
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadAdditionalFieldsForArticle(array $aItem, oxArticle $oArticle)
     {
-        $aItem = $this->_loadAttributesForArticle($aItem, $oArticle);
-        $aItem['manufacturer_item_number'] = $oArticle->oxarticles__oxmpn->value;
-        $aItem['currency'] = $this->_sCurrency;
-        $aItem['tax_percent'] = $oArticle->getArticleVat();
-        $aItem['msrp'] = $this->_formatPrice($oArticle->getTPrice()->getBruttoPrice());
+        return $this->_executeLoaders($this->_getAdditionalItemFieldLoaders(), $aItem, $oArticle);
+    }
 
-//        $aItem['shipping_costs_per_order'] = $oArticle->oxarticles__ox->value;
-//        $aItem['additional_shipping_costs_per_unit'] = $oArticle->oxarticles__ox->value;
 
+    /**
+     * article number by manufacturer
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_manufacturer_item_number(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['manufacturer_item_number']  = $oArticle->oxarticles__oxmpn->value;
+        return $aItem;
+    }
+
+    /**
+     * article currency
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_currency(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['currency']  = $this->_sCurrency;
+        return $aItem;
+    }
+
+    /**
+     * article VAT percentage
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_tax_percent(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['tax_percent']  = $oArticle->getArticleVat();
+        return $aItem;
+    }
+
+    /**
+     * article recommended retail price (RRP)
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_msrp(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['msrp']  = $this->_formatPrice($oArticle->getTPrice()->getBruttoPrice());
+        return $aItem;
+    }
+
+    /**
+     * article base price (price by one unit. by example 5EUR/liter )
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_basic_price(array $aItem, oxArticle $oArticle)
+    {
         if ((double) $oArticle->oxarticles__oxunitquantity->value && $oArticle->oxarticles__oxunitname->value) {
             $aItem['basic_price'] = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice() / (double) $oArticle->oxarticles__oxunitquantity->value);
         }
         else {
             $aItem['basic_price'] = '';
         }
+        return $aItem;
+    }
 
+    /**
+     * use or not stock control for this article
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_use_stock(array $aItem, oxArticle $oArticle)
+    {
         if ($this->_blOxidUsesStock && $oArticle->oxarticles__oxstockflag->value != 4) {
             $aItem['use_stock'] = 1;
         }
         else {
             $aItem['use_stock'] = 0;
         }
-        $aItem['stock_quantity'] = $oArticle->oxarticles__oxstock->value;
-        $aItem['ean'] = $oArticle->oxarticles__oxean->value;
-        $aItem['last_update'] = date('Y-m-d', strtotime($oArticle->oxarticles__oxtimestamp->value));
-        $aItem['tags'] = $oArticle->getTags();
-//        $aItem['sort_order'] = $oArticle->oxarticles__ox->value;
-        $aItem['marketplace'] = $oArticle->oxarticles__marm_shopgate_marketplace->value;
-//        $aItem['internal_order_info'] = $oArticle->oxarticles__ox->value;
-//        $aItem['related_shop_item_numbers'] = $oArticle->oxarticles__ox->value;
-//        $aItem['age_rating'] = $oArticle->oxarticles__ox->value;
-        $aItem['weight'] = $oArticle->oxarticles__oxweight->value*1000;
-        $aItem['is_free_shipping'] = $oArticle->oxarticles__oxfreeshipping->value;
-        $aItem = $this->_loadAmountPricesForArticle($aItem, $oArticle);
-//        $aItem['category_numbers'] = $oArticle->oxarticles__ox->value;
         return $aItem;
     }
 
-    protected function _loadAmountPricesForArticle(array $aItem, oxArticle $oArticle)
+    /**
+     * article available stock
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_stock_quantity(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['stock_quantity']  = $oArticle->oxarticles__oxstock->value;
+        return $aItem;
+    }
+
+    /**
+     * article EAN number
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_ean(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['ean']  = $oArticle->oxarticles__oxean->value;
+        return $aItem;
+    }
+
+    /**
+     * article last updated date
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_last_update(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['last_update']  = date('Y-m-d', strtotime($oArticle->oxarticles__oxtimestamp->value));
+        return $aItem;
+    }
+
+    /**
+     * article tags
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_tags(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['tags']  = $oArticle->getTags();
+        return $aItem;
+    }
+
+    /**
+     * article marketplace filled in oxarticles__marm_shopgate_marketplace
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_marketplace(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['marketplace'] = $oArticle->oxarticles__marm_shopgate_marketplace->value;
+        return $aItem;
+    }
+
+    /**
+     * article weight in grams
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_weight(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['weight']  = $oArticle->oxarticles__oxweight->value*1000;
+        return $aItem;
+    }
+
+    /**
+     * article free shoping flag by oxarticles__oxfreeshipping
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_is_free_shipping(array $aItem, oxArticle $oArticle)
+    {
+        $aItem['is_free_shipping']  = $oArticle->oxarticles__oxfreeshipping->value;
+        return $aItem;
+    }
+
+    /**
+     * loads article amount prices
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_block_pricing(array $aItem, oxArticle $oArticle)
     {
         $aPriceInfo = $oArticle->loadAmountPriceInfo();
         $aParsed = array();
@@ -480,7 +658,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
-    protected function _loadAttributesForArticle(array $aItem, oxArticle $oArticle)
+    /**
+     * loads article attributes
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_properties(array $aItem, oxArticle $oArticle)
     {
         $aProcessedAttributes = array();
         $aAttributes = $oArticle->getAttributes();

@@ -597,4 +597,89 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($aExpectedOutput, $oPlugin->_getManufacturers());
         $this->assertEquals($aExpectedOutput, $oPlugin->_getManufacturers(true));
     }
+
+    public function test__loadArticleExport_available_text()
+    {
+        $sIdent1 = 'DAY';
+        $sTransResult1 = 'DIENA';
+        $sIdent2 = 'WEEK';
+        $sTransResult2 = 'SAVAITES';
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getTranslation'
+            )
+        );
+        $oPlugin
+            ->expects($this->at(0))
+            ->method('_getTranslation')
+            ->with($this->identicalTo($sIdent1), $this->anything())
+            ->will($this->returnValue($sTransResult1))
+        ;
+        $oPlugin
+            ->expects($this->at(1))
+            ->method('_getTranslation')
+            ->with($this->identicalTo($sIdent2.'S'), $this->anything())
+            ->will($this->returnValue($sTransResult2))
+        ;
+        $oTestArticle = oxNew('oxArticle');
+        $oTestArticle->oxarticles__oxmindeltime = new oxField(1, oxField::T_RAW);
+        $oTestArticle->oxarticles__oxmaxdeltime = new oxField(1, oxField::T_RAW);
+        $oTestArticle->oxarticles__oxdeltimeunit = new oxField($sIdent1, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_available_text(array(), $oTestArticle);
+        $this->assertEquals('1 '.$sTransResult1, $aItem['available_text']);
+
+        $oTestArticle->oxarticles__oxmindeltime = new oxField(2, oxField::T_RAW);
+        $oTestArticle->oxarticles__oxmaxdeltime = new oxField(5, oxField::T_RAW);
+        $oTestArticle->oxarticles__oxdeltimeunit = new oxField($sIdent2, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_available_text(array(), $oTestArticle);
+        $this->assertEquals('2 - 5 '.$sTransResult2, $aItem['available_text']);
+    }
+
+    public function test__getAdditionalItemFieldLoaders()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aResult = $oPlugin->_getAdditionalItemFieldLoaders();
+        $this->assertContains('_loadArticleExport_properties', $aResult);
+        $this->assertContains('_loadArticleExport_manufacturer_item_number', $aResult);
+        $this->assertContains('_loadArticleExport_currency', $aResult);
+        $this->assertContains('_loadArticleExport_tax_percent', $aResult);
+        $this->assertContains('_loadArticleExport_msrp', $aResult);
+        $this->assertContains('_loadArticleExport_basic_price', $aResult);
+        $this->assertContains('_loadArticleExport_use_stock', $aResult);
+        $this->assertContains('_loadArticleExport_stock_quantity', $aResult);
+        $this->assertContains('_loadArticleExport_ean', $aResult);
+        $this->assertContains('_loadArticleExport_last_update', $aResult);
+        $this->assertContains('_loadArticleExport_tags', $aResult);
+        $this->assertContains('_loadArticleExport_marketplace', $aResult);
+        $this->assertContains('_loadArticleExport_weight', $aResult);
+        $this->assertContains('_loadArticleExport_is_free_shipping', $aResult);
+        $this->assertContains('_loadArticleExport_block_pricing', $aResult);
+    }
+
+    public function _loadAdditionalFieldsForArticle()
+    {
+        $aOutput = array('ok');
+        $aTestArticle = oxNew('oxArticle');
+        $aTestLoaders = array('test4', 'test5', 'test6');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_executeLoaders',
+                '_getAdditionalItemFieldLoaders'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getAdditionalItemFieldLoaders')
+            ->will($this->returnValue($aTestLoaders))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_executeLoaders')
+            ->with($aTestLoaders, array(), $aTestArticle)
+            ->will($this->returnValue($aOutput))
+        ;
+        $this->assertEquals($aOutput, $oPlugin->_loadRequiredFieldsForArticle(array(), $aTestArticle));
+    }
 }
