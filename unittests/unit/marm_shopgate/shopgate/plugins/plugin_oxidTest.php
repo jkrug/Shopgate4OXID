@@ -725,6 +725,29 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sVat, $aItem['tax_percent']);
     }
 
+    public function test__loadArticleExport_msrp()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        /** @var $oPrice oxprice */
+        $oPrice = oxNew('oxPrice');
+        $oPrice->setPrice(123.456);
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array(
+                'getTPrice'
+            )
+        );
+        $oTestArticle
+            ->expects($this->once())
+            ->method('getTPrice')
+            ->will($this->returnValue($oPrice))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_msrp(array(), $oTestArticle);
+        $this->assertEquals(123.46, $aItem['msrp']);
+
+    }
+
     public function test___loadArticleExport_basic_price()
     {
         /** @var $oTestArticle oxArticle */
@@ -746,6 +769,53 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals(10.00, $aItem['basic_price']);
     }
 
+    public function test__loadArticleExport_use_stock()
+    {
+        $oConfigMock = $this->getMock(
+            'oxConfig',
+            array(
+                'getConfigParam'
+            )
+        );
+        $oConfigMock
+            ->expects($this->at(0))
+            ->method('getConfigParam')
+            ->will($this->returnValue(true))
+        ;
+        $oConfigMock
+            ->expects($this->at(1))
+            ->method('getConfigParam')
+            ->will($this->returnValue(false))
+        ;
+        $oConfigMock
+            ->expects($this->at(2))
+            ->method('getConfigParam')
+            ->will($this->returnValue(true))
+        ;
+
+        modConfig::$unitMOD = $oConfigMock;
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        $oTestArticle = oxNew('oxArticle');
+
+        $oTestArticle->oxarticles__oxstockflag = new oxField(1, oxField::T_RAW);
+        $oPlugin->startup();
+        $aItem = $oPlugin->_loadArticleExport_use_stock(array(), $oTestArticle);
+        $this->assertEquals(1, $aItem['use_stock']);
+
+        $oTestArticle->oxarticles__oxstockflag = new oxField(1, oxField::T_RAW);
+        $oPlugin->startup();
+        $aItem = $oPlugin->_loadArticleExport_use_stock(array(), $oTestArticle);
+        $this->assertEquals(0, $aItem['use_stock']);
+
+        $oTestArticle->oxarticles__oxstockflag = new oxField(4, oxField::T_RAW);
+        $oPlugin->startup();
+        $aItem = $oPlugin->_loadArticleExport_use_stock(array(), $oTestArticle);
+        $this->assertEquals(0, $aItem['use_stock']);
+
+
+
+    }
 
     public function test__getActiveCurrency()
     {
