@@ -356,6 +356,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aSqlRes;
     }
 
+
+    /**
+     * Loads manufacturer name to which article belongs
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadArticleExport_manufacturer(array $aItem, oxArticle $oArticle)
     {
         $aItem['manufacturer'] = '';

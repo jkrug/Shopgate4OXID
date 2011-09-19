@@ -536,4 +536,37 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $sSQL = 'error';
         $this->assertEquals(array(), $oPlugin->_dbGetAll($sSQL));
     }
+
+    public function test__loadArticleExport_manufacturer()
+    {
+        $aManufacturers = array(
+            'man1' => 'acme',
+            'man2' => 'sony'
+        );
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getManufacturers'
+            )
+        );
+        $oPlugin
+            ->expects($this->exactly(2))
+            ->method('_getManufacturers')
+            ->will($this->returnValue($aManufacturers))
+        ;
+        $oTestArticle = oxNew('oxArticle');
+        // not set or empty
+        $aItem = $oPlugin->_loadArticleExport_manufacturer(array(), $oTestArticle);
+        $this->assertEquals('', $aItem['manufacturer']);
+        // not existing
+        $oTestArticle->oxarticles__oxmanufacturerid = new oxField('nonexisting');
+        $aItem = $oPlugin->_loadArticleExport_manufacturer(array(), $oTestArticle);
+        $this->assertEquals('', $aItem['manufacturer']);
+
+        // normal
+        $oTestArticle->oxarticles__oxmanufacturerid = new oxField('man1');
+        $aItem = $oPlugin->_loadArticleExport_manufacturer(array(), $oTestArticle);
+        $this->assertEquals($aManufacturers['man1'], $aItem['manufacturer']);
+
+    }
 }
