@@ -688,6 +688,26 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sValue, $aItem['manufacturer_item_number']);
     }
 
+
+    public function test__loadArticleExport_currency()
+    {
+        $sTestCur = "CurName";
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getActiveCurrency'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getActiveCurrency')
+            ->will($this->returnValue($sTestCur))
+         ;
+        $aItem = $oPlugin->_loadArticleExport_currency(array(), $oTestArticle);
+        $this->assertEquals($sTestCur, $aItem['currency']);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
