@@ -593,7 +593,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     protected function _loadArticleExport_last_update(array $aItem, oxArticle $oArticle)
     {
-        $aItem['last_update']  = date('Y-m-d', strtotime($oArticle->oxarticles__oxtimestamp->value));
+        $iTime = strtotime($oArticle->oxarticles__oxtimestamp->value);
+        if ($iTime) {
+            $aItem['last_update']  = date('Y-m-d', $iTime);
+        }
+        else {
+            $aItem['last_update'] = '';
+        }
         return $aItem;
     }
 
