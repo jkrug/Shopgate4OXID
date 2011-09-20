@@ -1204,6 +1204,37 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('not_valid', $oPlugin->_getTranslation('not_valid'));
     }
 
+    public function test__getLanguageTagForTable()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sLangTag  = '_1';
+        $sLangAbbr = 'en';
+        $oLangMock = $this->getMock(
+            'oxLang',
+            array(
+                'getLanguageTag',
+                'getLanguageAbbr'
+            )
+        );
+        $oLangMock
+            ->expects($this->exactly(3))
+            ->method('getLanguageTag')
+            ->will($this->returnValue($sLangTag))
+        ;
+        $oLangMock
+            ->expects($this->exactly(3))
+            ->method('getLanguageAbbr')
+            ->will($this->returnValue($sLangAbbr))
+        ;
+        $this->_blResetInstances = true;
+        modInstances::addMod('oxLang', $oLangMock);
+
+        $this->assertEquals($sLangTag, $oPlugin->_getLanguageTagForTable('oxarticles'));
+        $this->assertEquals($sLangTag, $oPlugin->_getLanguageTagForTable('oxv_oxarticles'));
+        $this->assertEquals('', $oPlugin->_getLanguageTagForTable('oxv_oxarticles_en'));
+
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(

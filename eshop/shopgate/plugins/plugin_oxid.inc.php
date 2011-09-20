@@ -854,10 +854,17 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $sTranslation;
     }
 
+    /**
+     * function to get language tag in oxid versions 4.0 - 4.5 formats
+     * in 4.5 introduced new views for each language with language abbr in ending.
+     * example: oxv_oxarticles_en, oxv_oxcategories_de
+     * @param $sTableName
+     * @return string
+     */
     protected function _getLanguageTagForTable($sTableName)
     {
         $oLang = oxLang::getInstance();
-        $sLangTag = oxLang::getInstance()->getLanguageTag();
+        $sLangTag  = $oLang->getLanguageTag();
         $sLangAbbr = $oLang->getLanguageAbbr();
         if (strpos($sTableName, 'oxv_') !== false && strpos($sTableName, '_'.$sLangAbbr) !== false) {
             $sLangTag = '';
