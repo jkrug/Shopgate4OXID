@@ -1232,7 +1232,27 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sLangTag, $oPlugin->_getLanguageTagForTable('oxarticles'));
         $this->assertEquals($sLangTag, $oPlugin->_getLanguageTagForTable('oxv_oxarticles'));
         $this->assertEquals('', $oPlugin->_getLanguageTagForTable('oxv_oxarticles_en'));
+    }
 
+    public function test_createReviewsCsv()
+    {
+        //empty function currently
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertNull($oPlugin->createReviewsCsv());
+    }
+
+    public function test_createPagesCsv()
+    {
+        //empty function currently
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertNull($oPlugin->createPagesCsv());
+    }
+
+    public function createShopInfo()
+    {
+        //empty function currently
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertNull($oPlugin->createShopInfo());
     }
 
     public function test__getActiveCurrency()

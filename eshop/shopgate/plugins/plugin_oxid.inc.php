@@ -872,11 +872,19 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $sLangTag;
     }
 
+    /**
+     * NOT IMPLEMENTED YET
+     * @return void
+     */
     protected function createReviewsCsv()
     {
 
     }
     
+    /**
+     * NOT IMPLEMENTED YET
+     * @return void
+     */
     protected function createPagesCsv()
     {
 
@@ -918,6 +926,10 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $oUserData;
     }
     
+    /**
+     * NOT IMPLEMENTED YET
+     * @return void
+     */
     public function createShopInfo(){}
 
     public function saveOrder(ShopgateOrder $order)
