@@ -833,6 +833,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * translates given ident, or picks firs translation from alternatives
+     * @param string $sIdent
+     * @param array $aAlternatives
+     * @return string
+     */
     protected function _getTranslation($sIdent, $aAlternatives = array())
     {
         $oLang = oxLang::getInstance();

@@ -41,10 +41,24 @@ require_once getShopBasePath() . 'shopgate/plugins/plugin_oxid.inc.php';
 
 class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 {
+    protected $_blResetOxConfig  = false;
+    protected $_blResetInstances = false;
+    protected $_blResetModules   = false;
+
     protected function tearDown()
     {
-        modConfig::$unitMOD = null;
-        oxTestModules::cleanUp();
+        if ($this->_blResetOxConfig) {
+            $this->_blResetOxConfig = false;
+            modConfig::$unitMOD = null;
+        }
+        if ($this->_blResetInstances) {
+            $this->_blResetInstances = false;
+            modInstances::cleanup();
+        }
+        if ($this->_blResetModules) {
+            $this->_blResetModules = false;
+            oxTestModules::cleanUp();
+        }
     }
     
     public function test_startup()
@@ -59,6 +73,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->expects($this->once())
             ->method('getConfigParam')
         ;
+        $this->_blResetOxConfig = true;
         modConfig::$unitMOD = $oConfigMock;
         $oPlugin = new ShopgatePlugin();
         $this->assertTrue($oPlugin->startup());
@@ -89,6 +104,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->method('setNoVariantLoading')
             ->with(true)
         ;
+        $this->_blResetModules = true;
         oxTestModules::addModuleObject('oxArticle', $oArticleMock);
         $oPlugin = $this->getProxyClass('ShopgatePlugin');
         $oResult = $oPlugin->_getArticleBase();
@@ -793,6 +809,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->will($this->returnValue(true))
         ;
 
+        $this->_blResetOxConfig = true;
         modConfig::$unitMOD = $oConfigMock;
         $oPlugin = $this->getProxyClass('ShopgatePlugin');
 
@@ -1152,6 +1169,41 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertArrayNotHasKey('input_field_2_type', $aItem);
     }
 
+    public function test__getTranslation()
+    {
+        $sTranslated = 'translated';
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oLangMock = $this->getMock(
+            'oxLang',
+            array(
+                'translateString'
+            )
+        );
+        $oLangMock
+            ->expects($this->at(2))
+            ->method('translateString')
+            ->with('valid')
+            ->will($this->returnValue($sTranslated))
+        ;
+        $oLangMock
+            ->expects($this->at(3))
+            ->method('translateString')
+            ->with('also_valid')
+            ->will($this->returnValue($sTranslated))
+        ;
+        $oLangMock
+            ->expects($this->any())
+            ->method('translateString')
+            ->will($this->returnArgument(0))
+        ;
+        $this->_blResetInstances = true;
+        modInstances::addMod('oxLang', $oLangMock);
+        $this->assertEquals($sTranslated, $oPlugin->_getTranslation('invalid', array('also_invalid', 'valid')));
+        $this->assertEquals($sTranslated, $oPlugin->_getTranslation('also_valid', array('bad', 'notok')));
+        $this->assertEquals('not_valid', $oPlugin->_getTranslation('not_valid', array('not_valid')));
+        $this->assertEquals('not_valid', $oPlugin->_getTranslation('not_valid'));
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
@@ -1175,6 +1227,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             ->method('getActShopCurrencyObject')
             ->will($this->returnValue($oCur2))
         ;
+        $this->_blResetOxConfig = true;
         modConfig::$unitMOD = $oConfigMock;
         $oPlugin = $this->getProxyClass('ShopgatePlugin');
         $this->assertEquals($oCur1->name, $oPlugin->_getActiveCurrency());
