@@ -934,6 +934,41 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sResult, $aItem['block_pricing']);
     }
 
+    public function test__loadArticleExport_properties()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        $aAttributes = array();
+        $oAttribute = new stdClass();
+        $oAttribute->oxattribute__oxtitle = new oxField('resolution', oxField::T_RAW);
+        $oAttribute->oxattribute__oxvalue = new oxField('1024x768', oxField::T_RAW);
+        $aAttributes[] = $oAttribute;
+        $oAttribute = new stdClass();
+        $oAttribute->oxattribute__oxtitle = new oxField('USB', oxField::T_RAW);
+        $oAttribute->oxattribute__oxvalue = new oxField('2', oxField::T_RAW);
+        $aAttributes[] = $oAttribute;
+        $oAttribute = new stdClass();
+        $oAttribute->oxattribute__oxtitle = new oxField('SCART', oxField::T_RAW);
+        $oAttribute->oxattribute__oxvalue = new oxField('no', oxField::T_RAW);
+        $aAttributes[] = $oAttribute;
+
+        $sResult = 'resolution=>1024x768||USB=>2||SCART=>no';
+
+        $oArticleMock = $this->getMock(
+            'oxarticle',
+            array(
+                'getAttributes'
+            )
+        );
+        $oArticleMock
+            ->expects($this->once())
+            ->method('getAttributes')
+            ->will($this->returnValue($aAttributes))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_properties(array(), $oArticleMock);
+        $this->assertEquals($sResult, $aItem['properties']);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
