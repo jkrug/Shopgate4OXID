@@ -1099,6 +1099,37 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sValue, $aItem['parent_item_number']);
     }
 
+    public function test__loadArticleExport_attribute()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        //no variants (variant name or variant selection title)
+        $aItem = $oPlugin->_loadArticleExport_attribute(array(), $oTestArticle);
+        $this->assertEquals(array(), $aItem);
+
+        // then varname is set , article as child
+        $sValue = 'blue';
+        $oTestArticle->oxarticles__oxvarname = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_attribute(array(), $oTestArticle);
+        $this->assertEquals($sValue, $aItem['attribute_1']);
+        $this->assertArrayNotHasKey('attribute_2', $aItem);
+
+        // then varselect is set , article as parent, overwrites varname if set
+        $sValue = 'color';
+        $oTestArticle->oxarticles__oxvarselect = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_attribute(array(), $oTestArticle);
+        $this->assertEquals($sValue, $aItem['attribute_1']);
+        $this->assertArrayNotHasKey('attribute_2', $aItem);
+
+        // multivariant test
+        $sValue = 'color | size';
+        $oTestArticle->oxarticles__oxvarselect = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_attribute(array(), $oTestArticle);
+        $this->assertEquals('color', $aItem['attribute_1']);
+        $this->assertEquals('size', $aItem['attribute_2']);
+        $this->assertArrayNotHasKey('attribute_3', $aItem);
+    }
 
     public function test__getActiveCurrency()
     {

@@ -807,7 +807,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         }
         $iCount = 0;
         foreach (explode($this->_sVariantSeparator, $sVariantOptions) as $sVariantOption) {
-            $iCount++;
+            $iCount = $iCount + 1;
             $aItem['attribute_'.$iCount] = $sVariantOption;
         }
         return $aItem;
