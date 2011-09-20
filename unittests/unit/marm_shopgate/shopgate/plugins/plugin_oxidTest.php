@@ -969,6 +969,55 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sResult, $aItem['properties']);
     }
 
+    public function test_loadSelectionListForArticle()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aSelList = array();
+
+        $aSelValues = array(
+            'oxtitle' => 'color',
+            'oxvaldesc' => 'blue__@@red__@@green__@@'
+        );
+        $oxSelectionList = oxNew('oxSelectlist');
+        $oxSelectionList->assign($aSelValues);
+        $aSelList[] = $oxSelectionList;
+
+        $aSelValues = array(
+            'oxtitle' => 'size',
+            'oxvaldesc' => 'S__@@M__@@L__@@'
+        );
+        $oxSelectionList = oxNew('oxSelectlist');
+        $oxSelectionList->assign($aSelValues);
+        $aSelList[] = $oxSelectionList;
+
+        $oArticleMock = $this->getMock(
+            'oxArticle',
+            array(
+                'getSelections'
+            )
+        );
+        $oArticleMock
+            ->expects($this->at(0))
+            ->method('getSelections')
+            ->will($this->returnValue(false))
+        ;
+        $oArticleMock
+            ->expects($this->at(1))
+            ->method('getSelections')
+            ->will($this->returnValue($aSelList))
+        ;
+
+        $aItem = $oPlugin->_loadSelectionListForArticle(array(), $oArticleMock);
+        $this->assertEquals('0', $aItem['has_options']);
+
+        $aItem = $oPlugin->_loadSelectionListForArticle(array(), $oArticleMock);
+        $this->assertEquals('1', $aItem['has_options']);
+        $this->assertEquals('color', $aItem['option_1']);
+        $this->assertEquals('blue||red||green', $aItem['option_1_values']);
+        $this->assertEquals('size', $aItem['option_2']);
+        $this->assertEquals('S||M||L', $aItem['option_2_values']);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(

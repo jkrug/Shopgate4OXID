@@ -687,6 +687,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * loads article selection list
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadSelectionListForArticle(array $aItem, oxArticle $oArticle)
     {
         $oSelectionList = $oArticle->getSelections();
@@ -699,7 +705,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
         foreach ($oSelectionList as $oListItem) {
             $aSelections = $oListItem->getSelections();
             if ($aSelections) {
-                $iCount++;
+                $aSelectionValues = array();
+                $iCount = $iCount + 1;
                 $aItem['option_'.$iCount] = $oListItem->getLabel();
                 $aSelectionValues = array();
                 foreach ($aSelections as $oSelection) {
