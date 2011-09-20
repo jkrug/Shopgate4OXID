@@ -1053,6 +1053,22 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertContains('_loadArticleExport_attribute', $aResult);
     }
 
+    public function test__loadArticleExport_has_children()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        $sValue = '3';
+        $oTestArticle->oxarticles__oxvarcount = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_has_children(array(), $oTestArticle);
+        $this->assertEquals(1, $aItem['has_children']);
+
+        $sValue = '0';
+        $oTestArticle->oxarticles__oxvarcount = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadArticleExport_has_children(array(), $oTestArticle);
+        $this->assertEquals(0, $aItem['has_children']);
+    }
+
 
     public function test__getActiveCurrency()
     {
