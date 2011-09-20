@@ -1018,6 +1018,42 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('S||M||L', $aItem['option_2_values']);
     }
 
+    public function test__loadVariantsInfoForArticle()
+    {
+        $aOutput = array('ok');
+        $aTestArticle = oxNew('oxArticle');
+        $aTestLoaders = array('test7', 'test8', 'test9');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_executeLoaders',
+                '_getVariantFieldLoaders'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getVariantFieldLoaders')
+            ->will($this->returnValue($aTestLoaders))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_executeLoaders')
+            ->with($aTestLoaders, array(), $aTestArticle)
+            ->will($this->returnValue($aOutput))
+        ;
+        $this->assertEquals($aOutput, $oPlugin->_loadVariantsInfoForArticle(array(), $aTestArticle));
+    }
+
+    public function test__getVariantFieldLoaders()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aResult = $oPlugin->_getVariantFieldLoaders();
+        $this->assertContains('_loadArticleExport_has_children', $aResult);
+        $this->assertContains('_loadArticleExport_parent_item_number', $aResult);
+        $this->assertContains('_loadArticleExport_attribute', $aResult);
+    }
+
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(

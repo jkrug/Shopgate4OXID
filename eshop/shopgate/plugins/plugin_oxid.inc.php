@@ -46,6 +46,10 @@ class ShopgatePlugin extends ShopgatePluginCore {
         '_loadArticleExport_url_deeplink'
     );
 
+    /**
+     * stores additional field loaders for article export
+     * @var array
+     */
     protected $_aAdditionalItemFieldLoaders = array(
         '_loadArticleExport_properties',
         '_loadArticleExport_manufacturer_item_number',
@@ -62,6 +66,16 @@ class ShopgatePlugin extends ShopgatePluginCore {
         '_loadArticleExport_weight',
         '_loadArticleExport_is_free_shipping',
         '_loadArticleExport_block_pricing'
+    );
+
+    /**
+     * stores variant field loaders for article export
+     * @var array
+     */
+    protected $_aVariantFieldLoaders = array(
+        '_loadArticleExport_has_children',
+        '_loadArticleExport_parent_item_number',
+        '_loadArticleExport_attribute'
     );
 
     /**
@@ -720,7 +734,34 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * loads variants info
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadVariantsInfoForArticle(array $aItem, oxArticle $oArticle)
+    {
+        return $this->_executeLoaders($this->_getVariantFieldLoaders(), $aItem, $oArticle);
+    }
+
+    /**
+     * returns variant field loaders for article export
+     * @see self::$_aVariantFieldLoaders
+     * @return array
+     */
+    protected function _getVariantFieldLoaders()
+    {
+        return $this->_aVariantFieldLoaders;
+    }
+
+    /**
+     * load boolean if article has variants.
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_has_children(array $aItem, oxArticle $oArticle)
     {
         if ($oArticle->oxarticles__oxvarcount->value) {
             $aItem['has_children']   = 1;
@@ -728,12 +769,35 @@ class ShopgatePlugin extends ShopgatePluginCore {
         else {
             $aItem['has_children'] = 0;
         }
+        return $aItem;
+    }
+
+    /**
+     * if article has parent, loads it artnum
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_parent_item_number(array $aItem, oxArticle $oArticle)
+    {
         if ($oParentArticle = $oArticle->getParentArticle()) {
             $aItem['parent_item_number'] = $oParentArticle->oxarticles__oxartnum->value;
         }
         else {
-            $aItem['parent_item_number'] = 0;
+            $aItem['parent_item_number'] = '';
         }
+        return $aItem;
+    }
+
+    /**
+     * loads article variant name or selection name if parent
+     * Works with multi-variants
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
+    protected function _loadArticleExport_attribute(array $aItem, oxArticle $oArticle)
+    {
         $sVariantOptions = $oArticle->oxarticles__oxvarname->value;
         if ($oArticle->oxarticles__oxvarselect->value) {
             $sVariantOptions = $oArticle->oxarticles__oxvarselect->value;
