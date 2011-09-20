@@ -1131,6 +1131,27 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertArrayNotHasKey('attribute_3', $aItem);
     }
 
+    public function test__loadPersParamForArticle()
+    {
+        $oTestArticle = oxNew('oxArticle');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        // option not set for article
+        $aItem = $oPlugin->_loadPersParamForArticle(array(), $oTestArticle);
+        $this->assertEquals(0, $aItem['has_input_fields']);
+        $this->assertArrayNotHasKey('input_field_1_type', $aItem);
+
+        // then option is set
+        $sValue = '1';
+        $oTestArticle->oxarticles__oxisconfigurable = new oxField($sValue, oxField::T_RAW);
+        $aItem = $oPlugin->_loadPersParamForArticle(array(), $oTestArticle);
+        $this->assertEquals(1, $aItem['has_input_fields']);
+        $this->assertEquals('text', $aItem['input_field_1_type']);
+        $this->assertArrayHasKey('input_field_1_label', $aItem);
+        $this->assertEquals(1, $aItem['input_field_1_required']);
+        $this->assertArrayNotHasKey('input_field_2_type', $aItem);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(

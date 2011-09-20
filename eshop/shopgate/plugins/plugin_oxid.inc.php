@@ -813,6 +813,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aItem;
     }
 
+    /**
+     * persistent param adding, if  oxarticles__oxisconfigurable is set
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     */
     protected function _loadPersParamForArticle(array $aItem, oxArticle $oArticle)
     {
         if ($oArticle->oxarticles__oxisconfigurable->value) {
