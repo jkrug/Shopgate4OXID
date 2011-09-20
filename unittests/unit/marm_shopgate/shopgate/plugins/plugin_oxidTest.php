@@ -899,6 +899,41 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sValue, $aItem['is_free_shipping']);
     }
 
+    public function test__loadArticleExport_block_pricing()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        $aPriceInfo = array();
+        $oPriceInfo = new stdClass();
+        $oPriceInfo->oxprice2article__oxamount = new oxField(5, oxField::T_RAW);
+        $oPriceInfo->fbrutprice = 10;
+        $aPriceInfo[] = $oPriceInfo;
+        $oPriceInfo = new stdClass();
+        $oPriceInfo->oxprice2article__oxamount = new oxField(10, oxField::T_RAW);
+        $oPriceInfo->fbrutprice = 8;
+        $aPriceInfo[] = $oPriceInfo;
+        $oPriceInfo = new stdClass();
+        $oPriceInfo->oxprice2article__oxamount = new oxField(15, oxField::T_RAW);
+        $oPriceInfo->fbrutprice = 5;
+        $aPriceInfo[] = $oPriceInfo;
+
+        $sResult = '5=>10||10=>8||15=>5';
+
+        $oArticleMock = $this->getMock(
+            'oxarticle',
+            array(
+                'loadAmountPriceInfo'
+            )
+        );
+        $oArticleMock
+            ->expects($this->once())
+            ->method('loadAmountPriceInfo')
+            ->will($this->returnValue($aPriceInfo))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_block_pricing(array(), $oArticleMock);
+        $this->assertEquals($sResult, $aItem['block_pricing']);
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
