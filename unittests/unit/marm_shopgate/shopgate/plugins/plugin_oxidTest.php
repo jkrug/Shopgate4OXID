@@ -6,6 +6,14 @@ require_once 'unit/test_config.inc.php';
 /**
  * Dummy class for testing only
  */
+class ShopgateConnectException extends Exception
+{
+    const INVALID_USERNAME_OR_PASSWORD = 100;
+}
+class ShopgateShopCustomer {
+    const MALE = 0;
+    const FEMALE = 1;
+}
 class ShopgatePluginCore {}
 class ShopgateFramework {}
 class ShopgateConfig {
@@ -1253,6 +1261,128 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         //empty function currently
         $oPlugin = $this->getProxyClass('ShopgatePlugin');
         $this->assertNull($oPlugin->createShopInfo());
+    }
+
+    public function test__createShopCustomerObject()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertType('ShopgateShopCustomer', $oPlugin->_createShopCustomerObject());
+    }
+
+    public function test_getUserData()
+    {
+        $aTestUser = array(
+            'CustomerNumber' => '123',
+            'FirstName' => 'Name',
+            'Surname' => 'Lastname',
+            'Mail' => 'no@mail.com',
+            'Phone' => '1221212',
+            'Mobile' => '69219422132',
+            'Gender' => ShopgateShopCustomer::MALE,
+            'Street' => 'strase 15',
+            'Street1' => 'strase',
+            'Street2' => '15',
+            'City' => 'marma',
+            'Zip' => '43212',
+            'Country' => 'Germany',
+            'Company' => 'marmala',
+
+        );
+        $oShopgateCustomer = $this->getMock(
+            'ShopgateShopCustomer',
+            array(
+                'setCustomerNumber',
+                'setFirstName',
+                'setSurname',
+                'setMail',
+                'setPhone',
+                'setMobile',
+                'setGender',
+                'setStreet',
+                'setCity',
+                'setZip',
+                'setCountry',
+                'setCompany'
+            )
+        );
+        $oShopgateCustomer->expects($this->exactly(2))->method('setCustomerNumber')->with($aTestUser['CustomerNumber']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setFirstName')->with($aTestUser['FirstName']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setSurname')->with($aTestUser['Surname']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setMail')->with($aTestUser['Mail']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setPhone')->with($aTestUser['Phone']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setMobile')->with($aTestUser['Mobile']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setStreet')->with($aTestUser['Street']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setCity')->with($aTestUser['City']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setZip')->with($aTestUser['Zip']);
+        $oShopgateCustomer->expects($this->exactly(2))->method('setCountry')->with($aTestUser['Country']);
+
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_createShopCustomerObject'
+            )
+        );
+        $oPlugin
+            ->expects($this->atLeastOnce())
+            ->method('_createShopCustomerObject')
+            ->will($this->returnValue($oShopgateCustomer))
+        ;
+        $oUserMock = $this->getMock(
+            'oxUser',
+            array(
+                'login',
+                'getUserCountry'
+            )
+        );
+        $oUserMock
+            ->expects($this->atLeastOnce())
+            ->method('getUserCountry')
+            ->will($this->returnValue($aTestUser['Country']))
+        ;
+        $sBadUser = '';
+        $sBadPassword = '';
+        $oBadException = oxNew( 'oxUserException' );
+        $oBadException->setMessage( 'EXCEPTION_USER_NOVALIDLOGIN' );
+
+        $oUserMock
+            ->expects($this->at(0))
+            ->method('login')
+            ->will($this->throwException($oBadException))
+        ;
+        $this->_blResetModules = true;
+        oxTestModules::addModuleObject('oxUser', $oUserMock);
+        
+        try {
+            $oPlugin->getUserData($sBadUser, $sBadPassword);
+            $this->fail('Bad login should throw exception');
+        }
+        catch(ShopgateConnectException $oEx) {
+            $this->assertEquals(ShopgateConnectException::INVALID_USERNAME_OR_PASSWORD, $oEx->getCode());
+        }
+        $oUserMock
+            ->expects($this->any())
+            ->method('login')
+        ;
+
+        $oUserMock->oxuser__oxcustnr    = new oxField($aTestUser['CustomerNumber'], oxField::T_RAW);
+        $oUserMock->oxuser__oxfname     = new oxField($aTestUser['FirstName'], oxField::T_RAW);
+        $oUserMock->oxuser__oxlname     = new oxField($aTestUser['Surname'], oxField::T_RAW);
+        $oUserMock->oxuser__oxusername  = new oxField($aTestUser['Mail'], oxField::T_RAW);
+        $oUserMock->oxuser__oxfon       = new oxField($aTestUser['Phone'], oxField::T_RAW);
+        $oUserMock->oxuser__oxmobfon    = new oxField($aTestUser['Mobile'], oxField::T_RAW);
+        $oUserMock->oxuser__oxsal       = new oxField('MR', oxField::T_RAW);
+        $oUserMock->oxuser__oxstreet    = new oxField($aTestUser['Street1'], oxField::T_RAW);
+        $oUserMock->oxuser__oxstreetnr  = new oxField($aTestUser['Street2'], oxField::T_RAW);
+        $oUserMock->oxuser__oxcity      = new oxField($aTestUser['City'], oxField::T_RAW);
+        $oUserMock->oxuser__oxzip       = new oxField($aTestUser['Zip'], oxField::T_RAW);
+        $oUserMock->oxuser__oxcompany   = new oxField($aTestUser['Company'], oxField::T_RAW);
+
+        $this->assertType('ShopgateShopCustomer', $oPlugin->getUserData('', ''));
+
+        $oUserMock->oxuser__oxcompany   = new oxField('', oxField::T_RAW);
+        $oUserMock->oxuser__oxsal       = new oxField('MRS', oxField::T_RAW);
+        $this->assertType('ShopgateShopCustomer', $oPlugin->getUserData('', ''));
+
     }
 
     public function test__getActiveCurrency()

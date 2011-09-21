@@ -889,7 +889,23 @@ class ShopgatePlugin extends ShopgatePluginCore {
     {
 
     }
-    
+
+    /**
+     * creates user objects and returns it
+     * @return ShopgateShopCustomer
+     */
+    protected function _createShopCustomerObject()
+    {
+        return new ShopgateShopCustomer();
+    }
+
+    /**
+     * Responsible for gettin user data from shop to shopgate
+     * @throws ShopgateConnectException
+     * @param string $user
+     * @param string $pass
+     * @return ShopgateShopCustomer
+     */
     public function getUserData($user, $pass)
     {
         $oUser = oxNew( 'oxuser' );
@@ -900,7 +916,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
             throw new ShopgateConnectException("Invalid username or password", ShopgateConnectException::INVALID_USERNAME_OR_PASSWORD);
         }
 
-        $oUserData = new ShopgateShopCustomer();
+        $oUserData = $this->_createShopCustomerObject();
         $oUserData->setCustomerNumber($oUser->oxuser__oxcustnr->value);
         $oUserData->setFirstName($oUser->oxuser__oxfname->value);
         $oUserData->setSurname($oUser->oxuser__oxlname->value);
