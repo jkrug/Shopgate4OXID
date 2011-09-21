@@ -948,57 +948,98 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     public function createShopInfo(){}
 
+    /**
+     * this function will import Shopgate
+     * @param ShopgateOrder $order
+     * @return void
+     */
     public function saveOrder(ShopgateOrder $order)
     {
         $oNewOrder = oxNew('oxorder');
 
-        $oNewOrder->oxorder__oxtotalordersum = new oxField($order->getAmountComplete()/100, oxField::T_RAW);
-        /** @var $oPrice oxPrice */
-        $oPrice = oxNew('oxprice');
-        $oPrice->setPrice($order->getAmountItems()/100.0, oxConfig::getInstance()->getConfigParam( 'dDefaultVAT' ));
-
-        $oNewOrder->oxorder__oxtotalnetsum   = new oxField(oxUtils::getInstance()->fRound($oPrice->getNettoPrice()), oxField::T_RAW);
-        $oNewOrder->oxorder__oxtotalbrutsum  = new oxField(oxUtils::getInstance()->fRound($oPrice->getBruttoPrice()), oxField::T_RAW);
-
-        $oNewOrder->oxorder__oxartvat1      = new oxField($oPrice->getVat(), oxField::T_RAW);
-        $oNewOrder->oxorder__oxartvatprice1 = new oxField($oPrice->getVatValue(), oxField::T_RAW);
-
-        // user remark
-        $aDeliveryNotes = $order->getDeliversNotes();
-        if ( $aDeliveryNotes ) {
-            if (is_array($aDeliveryNotes)) {
-                $oNewOrder->oxorder__oxremark = new oxField(var_export($aDeliveryNotes, true), oxField::T_RAW);
-            }
-            else {
-                $oNewOrder->oxorder__oxremark = new oxField($aDeliveryNotes, oxField::T_RAW);
-            }
-
-        }
+        $oNewOrder = $this->_loadOrderPrice($oNewOrder, $order);
+        $oNewOrder = $this->_loadOrderRemark($oNewOrder, $order);
         $oNewOrder = $this->_loadOrderContacts($oNewOrder, $order);
-
-        // currency
-        $oNewOrder->oxorder__oxcurrency = new oxField($order->getOrderCurrency());
-        $oNewOrder->oxorder__oxcurrate  = new oxField(1, oxField::T_RAW);
-
-        //order language
-        $oNewOrder->oxorder__oxlang = new oxField( $oNewOrder->getOrderLanguage() );
-
-
-        $oNewOrder->oxorder__oxtransstatus = new oxField('FROM_SHOPGATE', oxField::T_RAW);
-        $oNewOrder->oxorder__oxfolder      = new oxField(key( oxConfig::getInstance()->getShopConfVar(  'aOrderfolder' ) ), oxField::T_RAW);
-
-//        $oNewOrder->oxorder__oxpaymentid
-//        $oNewOrder->oxorder__oxpaymenttype
-//        $oNewOrder->oxorder__oxdeltype
+        $oNewOrder = $this->_loadOrderAdditionalInfo($oNewOrder, $order);
 
         $oNewOrder->save();
 
         // copies basket product info ...
         $this->_saveOrderArticles($oNewOrder, $order);
-
-        $oNewOrder->save();
     }
 
+    /**
+     * returns updated order with order sums, vats and currency
+     * @param oxOrder $oOxidOrder this order will be updated
+     * @param ShopgateOrder $oShopgateOrder from here info will be taken
+     * @return oxOrder updated order
+     */
+    protected function _loadOrderPrice(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
+    {
+        $oOxidOrder->oxorder__oxtotalordersum = new oxField($oShopgateOrder->getAmountComplete()/100, oxField::T_RAW);
+        /** @var $oPrice oxPrice */
+        $oPrice = oxNew('oxprice');
+        $oPrice->setPrice($oShopgateOrder->getAmountItems()/100.0, oxConfig::getInstance()->getConfigParam( 'dDefaultVAT' ));
+
+        $oOxidOrder->oxorder__oxtotalnetsum   = new oxField(oxUtils::getInstance()->fRound($oPrice->getNettoPrice()), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxtotalbrutsum  = new oxField(oxUtils::getInstance()->fRound($oPrice->getBruttoPrice()), oxField::T_RAW);
+
+        $oOxidOrder->oxorder__oxartvat1      = new oxField($oPrice->getVat(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxartvatprice1 = new oxField($oPrice->getVatValue(), oxField::T_RAW);
+
+        // currency
+        $oOxidOrder->oxorder__oxcurrency = new oxField($oShopgateOrder->getOrderCurrency());
+        $oOxidOrder->oxorder__oxcurrate  = new oxField(1, oxField::T_RAW);
+
+        return $oOxidOrder;
+    }
+
+    /**
+     * returns updated order with user delivery notes
+     * @param oxOrder $oOxidOrder this order will be updated
+     * @param ShopgateOrder $oShopgateOrder from here info will be taken
+     * @return oxOrder updated order
+     */
+    protected function _loadOrderRemark(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
+    {
+        // user remark
+        $oOxidOrder = $oShopgateOrder->getDeliversNotes();
+        if ( $aDeliveryNotes ) {
+            if (is_array($aDeliveryNotes)) {
+                $oOxidOrder->oxorder__oxremark = new oxField(var_export($aDeliveryNotes, true), oxField::T_RAW);
+            }
+            else {
+                $oOxidOrder->oxorder__oxremark = new oxField($aDeliveryNotes, oxField::T_RAW);
+            }
+
+        }
+
+        return $oOxidOrder;
+    }
+
+    /**
+     * returns updated order with user delivery notes
+     * @param oxOrder $oOxidOrder this order will be updated
+     * @param ShopgateOrder $oShopgateOrder from here info will be taken
+     * @return oxOrder updated order
+     */
+    protected function _loadOrderAdditionalInfo(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
+    {
+        //order language
+        $oOxidOrder->oxorder__oxlang = new oxField( $oOxidOrder->getOrderLanguage() );
+
+        $oOxidOrder->oxorder__oxtransstatus = new oxField('FROM_SHOPGATE', oxField::T_RAW);
+        $oOxidOrder->oxorder__oxfolder      = new oxField(key( oxConfig::getInstance()->getShopConfVar(  'aOrderfolder' ) ), oxField::T_RAW);
+
+        return $oOxidOrder;
+    }
+
+    /**
+     * returns updated order with customer billing and shipping address
+     * @param oxOrder $oOxidOrder this order will be updated
+     * @param ShopgateOrder $oShopgateOrder from here info will be taken
+     * @return oxOrder updated order
+     */
     protected function _loadOrderContacts(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
     {
         $sPhone = $oShopgateOrder->getCustomerMobile();
@@ -1139,6 +1180,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
             $oArticles->offsetSet( $oOrderArticle->getId(), $oOrderArticle );
         }
         $oOxidOrder->setOrderArticleList($oArticles);
+        $oOxidOrder->save();
+
     }
 
     protected function _loadSelectionsForOrderArticle(
