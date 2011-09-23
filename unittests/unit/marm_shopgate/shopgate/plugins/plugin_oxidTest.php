@@ -15,6 +15,7 @@ class ShopgateShopCustomer {
     const FEMALE = 1;
 }
 class ShopgatePluginCore {}
+class ShopgateOrder{}
 class ShopgateFramework {}
 class ShopgateConfig {
     static public function setConfig(){}
@@ -157,8 +158,9 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
     public function test_createItemsCsv()
     {
-        $sTestSql = 'SELECT * FROM oxarticles LIMIT 2';
+        $sTestSql = 'SELECT OXID FROM oxarticles LIMIT 2';
         $oxArticle = oxNew('oxArticle');
+        $oxArticle->setSkipAssign(true);
         $oPlugin = $this->getMock(
             $this->getProxyClassName('ShopgatePlugin'),
             array(
@@ -1317,7 +1319,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oShopgateCustomer->expects($this->exactly(2))->method('setCountry')->with($aTestUser['Country']);
 
         $oPlugin = $this->getMock(
-            $this->getProxyClassName('ShopgatePlugin'),
+            $this->getProxyClassName('ShopgatePlugin'), 
             array(
                 '_createShopCustomerObject'
             )
@@ -1382,6 +1384,60 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oUserMock->oxuser__oxcompany   = new oxField('', oxField::T_RAW);
         $oUserMock->oxuser__oxsal       = new oxField('MRS', oxField::T_RAW);
         $this->assertType('ShopgateShopCustomer', $oPlugin->getUserData('', ''));
+
+    }
+
+    public function test__getOrderImportLoaders()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aResult = $oPlugin->_getOrderImportLoaders();
+        $this->assertContains('_loadOrderPrice', $aResult);
+        $this->assertContains('_loadOrderRemark', $aResult);
+        $this->assertContains('_loadOrderContacts', $aResult);
+        $this->assertContains('_loadOrderAdditionalInfo', $aResult);
+    }
+
+    public function test_saveOrder()
+    {
+        $oTestOrder = $this->getMock(
+            'oxOrder',
+            array(
+                'save'
+            )
+        );
+        $oTestOrder
+            ->expects($this->once())
+            ->method('save')
+        ;
+        $this->_blResetModules = true;
+        oxTestModules::addModuleObject('oxOrder', $oTestOrder);
+        $oShopgateOrder = new ShopgateOrder();
+        $aTestLoaders = array('test123');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_executeLoaders',
+                '_getOrderImportLoaders',
+                '_saveOrderArticles'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getOrderImportLoaders')
+            ->will($this->returnValue($aTestLoaders))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_executeLoaders')
+            ->with($aTestLoaders, $oTestOrder, $oShopgateOrder)
+            ->will($this->returnValue($oTestOrder))
+        ;
+        $oPlugin
+            ->expects($this->once())
+            ->method('_saveOrderArticles')
+            ->with( $oTestOrder, $oShopgateOrder)
+        ;
+        $this->assertNull($oPlugin->saveOrder($oShopgateOrder));
 
     }
 

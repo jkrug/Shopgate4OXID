@@ -78,6 +78,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
         '_loadArticleExport_attribute'
     );
 
+    protected $_aOrderImportLoaders = array(
+        '_loadOrderPrice',
+        '_loadOrderRemark',
+        '_loadOrderContacts',
+        '_loadOrderAdditionalInfo'
+    );
+
     /**
      * associated array of categories paths
      * array(category id => category path)
@@ -167,18 +174,18 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * executes given functions, to fulfill $aItem.
      *
      * @param array $aLoaders method names in this class
-     * @param array $aItem where to fill information
-     * @param oxArticle $oArticle from here info will be taken
      * @return array changed $aItem
      */
-    protected function _executeLoaders(array $aLoaders, array $aItem, oxArticle $oArticle)
+    protected function _executeLoaders(array $aLoaders)
     {
+        $aArguments = func_get_args();
+        array_shift($aArguments);
         foreach ($aLoaders as $sMethod) {
             if (method_exists($this, $sMethod)) {
-                $aItem = $this->{$sMethod}($aItem, $oArticle);
+                $aArguments[0] = call_user_func_array( array( $this, $sMethod ), $aArguments );
             }
         }
-        return $aItem;
+        return $aArguments[0];
     }
 
     /**
@@ -946,7 +953,21 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * NOT IMPLEMENTED YET
      * @return void
      */
-    public function createShopInfo(){}
+    public function createShopInfo()
+    {
+
+    }
+
+
+    /**
+     * returns main loaders for order import
+     * @see self::$_aOrderImportLoaders
+     * @return array
+     */
+    protected function _getOrderImportLoaders()
+    {
+        return $this->_aOrderImportLoaders;
+    }
 
     /**
      * this function will import Shopgate
@@ -957,10 +978,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     {
         $oNewOrder = oxNew('oxorder');
 
-        $oNewOrder = $this->_loadOrderPrice($oNewOrder, $order);
-        $oNewOrder = $this->_loadOrderRemark($oNewOrder, $order);
-        $oNewOrder = $this->_loadOrderContacts($oNewOrder, $order);
-        $oNewOrder = $this->_loadOrderAdditionalInfo($oNewOrder, $order);
+        $oNewOrder = $this->_executeLoaders($this->_getOrderImportLoaders(), $oNewOrder, $order);
 
         $oNewOrder->save();
 
