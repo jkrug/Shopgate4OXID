@@ -36,6 +36,7 @@ class ShopgateShopCustomer {
 class ShopgatePluginCore {}
 class ShopgateOrder{}
 class ShopgateOrderAddress{}
+class ShopgateOrderItem{}
 class ShopgateFramework {}
 class ShopgateConfig {
     static public function setConfig(){}
@@ -1936,6 +1937,177 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         oxTestModules::addModuleObject('oxArticle', $oArticleMock);
         
         $this->assertEquals($oArticleMock, $oPlugin->_getArticleByNumber($sArtNum));
+    }
+
+    public function test__saveOrderArticles()
+    {
+        $this->_blResetModules = true;
+        $sOxidOrderId = 'testorderid1';
+        $sOxidOrderArticleId = 'sOxidOrderArticleId2';
+        $sOxidArticleId = 'sOxidArticleId3';
+        $sOxidShopId = 'sOxidArticleId4';
+        $oOrderItem = new stdClass();
+        $oOrderItem->getItemNumber = 'art_num';
+        $oOrderItem->getName = 'title_here';
+        $oOrderItem->getQuantity = '2';
+        $oOrderItem->getUnitAmount = '200';
+        $oOrderItem->getUnitAmountWithTax = '232';
+        $oOrderItem->getTaxPercent = '16';
+
+        $oProductMock = $this->getMock(
+            'oxArticle',
+            array(
+                'getId',
+                'getShopId'
+            )
+        );
+        $oProductMock
+            ->expects($this->atLeastOnce())
+            ->method('getId')
+            ->will($this->returnValue($sOxidArticleId))
+        ;
+        $oProductMock
+            ->expects($this->atLeastOnce())
+            ->method('getShopId')
+            ->will($this->returnValue($sOxidShopId))
+        ;
+
+        $oShopgateOrderItemMock = $this->getMock(
+            'ShopgateOrderItem',
+            array(
+                'getItemNumber',
+                'getName',
+                'getQuantity',
+                'getUnitAmount',
+                'getUnitAmountWithTax',
+                'getTaxPercent'
+            )
+        );
+        $oShopgateOrderItemMock->expects($this->atLeastOnce())
+                ->method('getItemNumber')->will($this->returnValue($oOrderItem->getItemNumber));
+        $oShopgateOrderItemMock->expects($this->atLeastOnce())
+                ->method('getName')->will($this->returnValue($oOrderItem->getName));
+        $oShopgateOrderItemMock->expects($this->atLeastOnce())
+                ->method('getQuantity')->will($this->returnValue($oOrderItem->getQuantity));
+        $oShopgateOrderItemMock->expects($this->atLeastOnce())
+                ->method('getUnitAmount')->will($this->returnValue($oOrderItem->getUnitAmount));
+        $oShopgateOrderItemMock->expects($this->atLeastOnce())
+                ->method('getUnitAmountWithTax')->will($this->returnValue($oOrderItem->getUnitAmountWithTax));
+        $oShopgateOrderItemMock->expects($this->atLeastOnce())
+                ->method('getTaxPercent')->will($this->returnValue($oOrderItem->getTaxPercent));
+
+        $oShopgateOrderMock = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getOrderItems'
+            )
+        );
+        $oShopgateOrderMock
+                ->expects($this->once())
+                ->method('getOrderItems')
+                ->will($this->returnValue(array($oShopgateOrderItemMock)))
+        ;
+        $oOrderArticleMock = $this->getMock(
+            'oxorderarticle',
+            array(
+                'setIsNewOrderItem',
+                'copyThis',
+                'setId',
+                'getId'
+            )
+        );
+        $oOrderArticleMock
+            ->expects($this->atLeastOnce())
+            ->method('getId')
+            ->will($this->returnValue($sOxidOrderArticleId))
+        ;
+        $oOrderArticleMock
+            ->expects($this->atLeastOnce())
+            ->method('setIsNewOrderItem')
+            ->with(true)
+        ;
+        $oOrderArticleMock
+            ->expects($this->atLeastOnce())
+            ->method('setId')
+        ;
+        $oOrderArticleMock
+            ->expects($this->atLeastOnce())
+            ->method('copyThis')
+            ->with($oProductMock)
+        ;
+        oxTestModules::addModuleObject('oxorderarticle', $oOrderArticleMock);
+
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getArticleByNumber',
+                '_loadSelectionsForOrderArticle'
+            )
+        );
+        $oPlugin
+            ->expects($this->atLeastOnce())
+            ->method('_getArticleByNumber')
+            ->with($oOrderItem->getItemNumber)
+            ->will($this->returnValue($oProductMock))
+        ;
+        $oPlugin
+            ->expects($this->atLeastOnce())
+            ->method('_loadSelectionsForOrderArticle')
+//            ->with($oOrderArticleMock, $oShopgateOrderItemMock, $oProductMock)
+            ->will($this->returnValue($oOrderArticleMock))
+        ;
+
+        $oListMock = $this->getMock(
+            'oxList',
+            array(
+                'offsetSet'
+            )
+        );
+        $oListMock
+            ->expects($this->atLeastOnce())
+            ->method('offsetSet')
+            ->with($sOxidOrderArticleId, $oOrderArticleMock)
+        ;
+        oxTestModules::addModuleObject('oxList', $oListMock);
+
+        $oOrderMock = $this->getMock(
+            'oxOrder',
+            array(
+                'setOrderArticleList',
+                'save',
+                'getId'
+            )
+        );
+        $oOrderMock
+            ->expects($this->once())
+            ->method('save')
+        ;
+        $oOrderMock
+            ->expects($this->atLeastOnce())
+            ->method('getId')
+            ->will($this->returnValue($sOxidOrderId))
+        ;
+        $oOrderMock
+            ->expects($this->once())
+            ->method('setOrderArticleList')
+            ->with($oListMock)
+        ;
+        $oPlugin->_saveOrderArticles($oOrderMock, $oShopgateOrderMock);
+        $oOrderArticle = $oOrderArticleMock;
+
+        $this->assertEquals($oOrderItem->getItemNumber, $oOrderArticle->oxorderarticles__oxartnum->value);
+        $this->assertEquals($oOrderItem->getName, $oOrderArticle->oxorderarticles__oxtitle->value);
+        $this->assertEquals($sOxidOrderId, $oOrderArticle->oxorderarticles__oxorderid->value);
+        $this->assertEquals($sOxidArticleId, $oOrderArticle->oxorderarticles__oxartid->value);
+        $this->assertEquals($oOrderItem->getQuantity, $oOrderArticle->oxorderarticles__oxamount->value);
+        $this->assertEquals(2.00, $oOrderArticle->oxorderarticles__oxnetprice->value);
+        $this->assertEquals(0.32, $oOrderArticle->oxorderarticles__oxvatprice->value);
+        $this->assertEquals(2.32, $oOrderArticle->oxorderarticles__oxbrutprice->value);
+        $this->assertEquals(16, $oOrderArticle->oxorderarticles__oxvat->value);
+        $this->assertEquals(1.00, $oOrderArticle->oxorderarticles__oxnprice->value);
+        $this->assertEquals(1.16, $oOrderArticle->oxorderarticles__oxbprice->value);
+        $this->assertEquals($sOxidShopId, $oOrderArticle->oxorderarticles__oxordershopid->value);
+
     }
 
     public function test__getActiveCurrency()
