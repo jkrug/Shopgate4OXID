@@ -37,6 +37,7 @@ class ShopgatePluginCore {}
 class ShopgateOrder{}
 class ShopgateOrderAddress{}
 class ShopgateOrderItem{}
+class ShopgateOrderItemOption{}
 class ShopgateFramework {}
 class ShopgateConfig {
     static public function setConfig(){}
@@ -2107,6 +2108,81 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals(1.00, $oOrderArticle->oxorderarticles__oxnprice->value);
         $this->assertEquals(1.16, $oOrderArticle->oxorderarticles__oxbprice->value);
         $this->assertEquals($sOxidShopId, $oOrderArticle->oxorderarticles__oxordershopid->value);
+
+    }
+
+    public function test__loadSelectionsForOrderArticle()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $aOptions = array(
+            array(
+                'optionname1',
+                'optoinval2'
+            ),
+            array(
+                'optionname3',
+                'optoinval4'
+            )
+        );
+        $oShopgateOrderItemOptionMock = $this->getMock(
+            'ShopgateOrderItemOption',
+            array(
+                'getName',
+                'getValue'
+            )
+        );
+        $oShopgateOrderItemOptionMock
+            ->expects($this->at(0))
+            ->method('getName')
+            ->will($this->returnValue($aOptions[0][0]))
+        ;
+        $oShopgateOrderItemOptionMock
+            ->expects($this->at(1))
+            ->method('getValue')
+            ->will($this->returnValue($aOptions[0][1]))
+        ;
+        $oShopgateOrderItemOptionMock
+            ->expects($this->at(2))
+            ->method('getName')
+            ->will($this->returnValue($aOptions[1][0]))
+        ;
+        $oShopgateOrderItemOptionMock
+            ->expects($this->at(3))
+            ->method('getValue')
+            ->will($this->returnValue($aOptions[1][1]))
+        ;
+
+        $oShopgateOrderItemMock = $this->getMock(
+            'ShopgateOrderItem',
+            array(
+                'getHasOptions',
+                'getOptions'
+            )
+        );
+        $oShopgateOrderItemMock
+            ->expects($this->at(0))
+            ->method('getHasOptions')
+            ->will($this->returnValue(false))
+        ;
+        $oShopgateOrderItemMock
+            ->expects($this->any())
+            ->method('getHasOptions')
+            ->will($this->returnValue(true))
+        ;
+        $oShopgateOrderItemMock
+            ->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->will($this->returnValue(array($oShopgateOrderItemOptionMock, $oShopgateOrderItemOptionMock)))
+        ;
+        $oTestProduct = oxNew('oxArticle');
+        $oTestProduct->oxarticles__oxvarselect = new oxField('color');
+        $oTestOrder = oxNew('oxOrderArticle');
+
+        $oResult = $oPlugin->_loadSelectionsForOrderArticle($oTestOrder, $oShopgateOrderItemMock, $oTestProduct);
+        $this->assertEquals('color', $oResult->oxorderarticles__oxselvariant->value);
+
+        $oResult = $oPlugin->_loadSelectionsForOrderArticle($oTestOrder, $oShopgateOrderItemMock, $oTestProduct);
+        $this->assertEquals('optionname1 : optoinval2, optionname3 : optoinval4 color', $oResult->oxorderarticles__oxselvariant->value);
 
     }
 

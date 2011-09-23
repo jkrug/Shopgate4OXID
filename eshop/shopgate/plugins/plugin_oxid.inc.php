@@ -1230,6 +1230,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
     }
 
+    /**
+     * loads selection names and values to oxorderarticles__oxselvariant
+     * @param oxorderarticle $oOrderArticle
+     * @param ShopgateOrderItem $oShopgateOrderItem
+     * @param oxArticle $oProduct
+     * @return oxorderarticle
+     */
     protected function _loadSelectionsForOrderArticle(
             oxorderarticle $oOrderArticle,
             ShopgateOrderItem $oShopgateOrderItem,
