@@ -1485,6 +1485,47 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($dArticleVatSum ,$oResult->oxorder__oxartvatprice1->value);
         $this->assertEquals($sCurrency ,$oResult->oxorder__oxcurrency->value);
         $this->assertEquals(1, $oResult->oxorder__oxcurrate->value);
+    }
+
+    public function test__loadOrderRemark()
+    {
+        $sSingleString = 'orderremarkhere';
+        $aArray = array('order','remark','here');
+        $sConvertedArray = "array (\n  0 => 'order',\n  1 => 'remark',\n  2 => 'here',\n)";
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oShopgateOrderMock = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getDeliversNotes'
+            )
+        );
+        $oShopgateOrderMock
+            ->expects($this->at(0))
+            ->method('getDeliversNotes')
+            ->will($this->returnValue(null))
+        ;
+        $oShopgateOrderMock
+            ->expects($this->at(1))
+            ->method('getDeliversNotes')
+            ->will($this->returnValue($sSingleString))
+        ;
+        $oShopgateOrderMock
+            ->expects($this->at(2))
+            ->method('getDeliversNotes')
+            ->will($this->returnValue($aArray))
+        ;
+
+        $oTestOrder = oxNew('oxOrder');
+        $oResult = $oPlugin->_loadOrderRemark($oTestOrder, $oShopgateOrderMock);
+        $this->assertEquals('', $oResult->oxorder__oxremark->value);
+
+        $oTestOrder = oxNew('oxOrder');
+        $oResult = $oPlugin->_loadOrderRemark($oTestOrder, $oShopgateOrderMock);
+        $this->assertEquals($sSingleString, $oResult->oxorder__oxremark->value);
+
+        $oTestOrder = oxNew('oxOrder');
+        $oResult = $oPlugin->_loadOrderRemark($oTestOrder, $oShopgateOrderMock);
+        $this->assertEquals($sConvertedArray, $oResult->oxorder__oxremark->value);
 
 
     }

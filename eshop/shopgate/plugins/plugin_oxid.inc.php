@@ -1022,7 +1022,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _loadOrderRemark(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
     {
         // user remark
-        $oOxidOrder = $oShopgateOrder->getDeliversNotes();
+        $aDeliveryNotes = $oShopgateOrder->getDeliversNotes();
         if ( $aDeliveryNotes ) {
             if (is_array($aDeliveryNotes)) {
                 $oOxidOrder->oxorder__oxremark = new oxField(var_export($aDeliveryNotes, true), oxField::T_RAW);
