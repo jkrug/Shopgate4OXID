@@ -1441,6 +1441,54 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
     }
 
+    public function test__loadOrderPrice()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestOrder = oxNew('oxOrder');
+        $dTotalSum = 123.12;
+        $dArticleSum = 103.12;
+        $sCurrency = 'EUR';
+        $dDefaultVat = 17;
+        $dArticleSumNetto = round($dArticleSum / (1+($dDefaultVat/100)), 2);
+        $dArticleVatSum = $dArticleSum - $dArticleSumNetto;
+        $oShopgateOrder = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getAmountComplete',
+                'getAmountItems',
+                'getOrderCurrency'
+            )
+        );
+        $oShopgateOrder
+            ->expects($this->once())
+            ->method('getAmountComplete')
+            ->will($this->returnValue($dTotalSum*100))
+        ;
+        $oShopgateOrder
+            ->expects($this->once())
+            ->method('getAmountItems')
+            ->will($this->returnValue($dArticleSum*100))
+        ;
+        $oShopgateOrder
+            ->expects($this->once())
+            ->method('getOrderCurrency')
+            ->will($this->returnValue($sCurrency))
+        ;
+        modConfig::getInstance()->setConfigParam('dDefaultVAT', $dDefaultVat);
+
+        $oResult = $oPlugin->_loadOrderPrice($oTestOrder, $oShopgateOrder);
+
+        $this->assertEquals($dTotalSum ,$oResult->oxorder__oxtotalordersum->value);
+        $this->assertEquals($dArticleSumNetto ,$oResult->oxorder__oxtotalnetsum->value);
+        $this->assertEquals($dArticleSum ,$oResult->oxorder__oxtotalbrutsum->value);
+        $this->assertEquals($dDefaultVat ,$oResult->oxorder__oxartvat1->value);
+        $this->assertEquals($dArticleVatSum ,$oResult->oxorder__oxartvatprice1->value);
+        $this->assertEquals($sCurrency ,$oResult->oxorder__oxcurrency->value);
+        $this->assertEquals(1, $oResult->oxorder__oxcurrate->value);
+
+
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(

@@ -1002,8 +1002,9 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oOxidOrder->oxorder__oxtotalnetsum   = new oxField(oxUtils::getInstance()->fRound($oPrice->getNettoPrice()), oxField::T_RAW);
         $oOxidOrder->oxorder__oxtotalbrutsum  = new oxField(oxUtils::getInstance()->fRound($oPrice->getBruttoPrice()), oxField::T_RAW);
 
+        $dVatSum = $oOxidOrder->oxorder__oxtotalbrutsum->value - $oOxidOrder->oxorder__oxtotalnetsum->value;
         $oOxidOrder->oxorder__oxartvat1      = new oxField($oPrice->getVat(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxartvatprice1 = new oxField($oPrice->getVatValue(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxartvatprice1 = new oxField($dVatSum, oxField::T_RAW);
 
         // currency
         $oOxidOrder->oxorder__oxcurrency = new oxField($oShopgateOrder->getOrderCurrency());
