@@ -1145,7 +1145,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
     protected function _getUserOxidByEmail($sUserEmail)
     {
-        $sUserOxid = oxDb::getDb()->getOne(
+        $sUserOxid = $this->_dbGetOne(
             "SELECT OXID FROM oxuser WHERE OXUSERNAME = ?",
             array($sUserEmail)
         );
@@ -1158,7 +1158,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _getCountryId($sShopgateCountryId, $sCountryName)
     {
         $sLangTag = oxLang::getInstance()->getLanguageTag();
-        $sCountryId = oxDb::getDb()->getOne(
+        $sCountryId = $this->_dbGetOne(
             "SELECT OXID FROM oxcountry WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
             array($sShopgateCountryId, $sCountryName)
         );
@@ -1171,7 +1171,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _getStateId($sShopgateStateId, $sStateName)
     {
         $sLangTag = oxLang::getInstance()->getLanguageTag();
-        $sCountryId = oxDb::getDb()->getOne(
+        $sCountryId = $this->_dbGetOne(
             "SELECT OXID FROM oxstates WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
             array($sShopgateStateId, $sStateName)
         );
@@ -1254,7 +1254,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _getArticleByNumber($sArticleNumber)
     {
         $sArticleTable = getViewName('oxarticles');
-        $sArticleId = oxDb::getDb()->getOne("SELECT oxid FROM {$sArticleTable} WHERE oxartnum = ?", array($sArticleNumber));
+        $sArticleId = $this->_dbGetOne("SELECT oxid FROM {$sArticleTable} WHERE oxartnum = ?", array($sArticleNumber));
         return oxNewArticle($sArticleId);
     }
 
