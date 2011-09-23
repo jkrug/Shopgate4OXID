@@ -1526,8 +1526,33 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oTestOrder = oxNew('oxOrder');
         $oResult = $oPlugin->_loadOrderRemark($oTestOrder, $oShopgateOrderMock);
         $this->assertEquals($sConvertedArray, $oResult->oxorder__oxremark->value);
+    }
 
-
+    public function test__loadOrderAdditionalInfo()
+    {
+        $sOrderLang = 1;
+        $aOrderFolders = array(
+            'First' => 'one',
+            'Second' => 'one'
+        );
+        modConfig::getInstance()->setConfigParam('aOrderfolder', $aOrderFolders);
+        $oShopgateOrder = $this->getMock('ShopgateOrder');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oOrderMock = $this->getMock(
+            'oxOrder',
+            array(
+                'getOrderLanguage'
+            )
+        );
+        $oOrderMock
+            ->expects($this->once())
+            ->method('getOrderLanguage')
+            ->will($this->returnValue($sOrderLang))
+        ;
+        $oResult = $oPlugin->_loadOrderAdditionalInfo($oOrderMock, $oShopgateOrder);
+        $this->assertEquals($sOrderLang, $oResult->oxorder__oxlang->value);
+        $this->assertEquals('FROM_SHOPGATE', $oResult->oxorder__oxtransstatus->value);
+        $this->assertEquals('First', $oResult->oxorder__oxfolder->value);
     }
 
     public function test__getActiveCurrency()

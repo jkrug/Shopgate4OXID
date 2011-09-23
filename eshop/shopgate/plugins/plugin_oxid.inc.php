@@ -1048,7 +1048,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oOxidOrder->oxorder__oxlang = new oxField( $oOxidOrder->getOrderLanguage() );
 
         $oOxidOrder->oxorder__oxtransstatus = new oxField('FROM_SHOPGATE', oxField::T_RAW);
-        $oOxidOrder->oxorder__oxfolder      = new oxField(key( oxConfig::getInstance()->getShopConfVar(  'aOrderfolder' ) ), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxfolder      = new oxField(key( oxConfig::getInstance()->getConfigParam(  'aOrderfolder' ) ), oxField::T_RAW);
 
         return $oOxidOrder;
     }
