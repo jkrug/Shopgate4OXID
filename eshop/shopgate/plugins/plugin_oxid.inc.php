@@ -406,6 +406,22 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $aSqlRes;
     }
 
+    /**
+     * db wrapper. Passes variables to mysql_driver_ADOConnection::GetOne().
+     * if result != true, returns empty array
+     * @param $sSQL
+     * @param array $aParams
+     * @return string|null
+     */
+    protected function _dbGetOne($sSQL, $aParams = array())
+    {
+        $aSqlRes = oxDb::getDb()->GetOne($sSQL, $aParams);
+        if (!$aSqlRes) {
+            $aSqlRes = null;
+        }
+        return $aSqlRes;
+    }
+
 
     /**
      * Loads manufacturer name to which article belongs

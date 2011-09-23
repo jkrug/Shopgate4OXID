@@ -578,6 +578,16 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals(array(), $oPlugin->_dbGetAll($sSQL));
     }
 
+    public function test__dbGetOne()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $sSQL = 'SELECT ? AS column_name';
+        $this->assertEquals('value', $oPlugin->_dbGetOne($sSQL, array('value')));
+
+        $sSQL = 'error';
+        $this->assertNull($oPlugin->_dbGetOne($sSQL));
+    }
+
     public function test__loadArticleExport_manufacturer()
     {
         $aManufacturers = array(
