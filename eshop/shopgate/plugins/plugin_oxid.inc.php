@@ -1143,41 +1143,46 @@ class ShopgatePlugin extends ShopgatePluginCore {
         return $oOxidOrder;
     }
 
+    /**
+     * returns user oxid if it exist by email
+     * @param $sUserEmail
+     * @return null|string
+     */
     protected function _getUserOxidByEmail($sUserEmail)
     {
-        $sUserOxid = $this->_dbGetOne(
-            "SELECT OXID FROM oxuser WHERE OXUSERNAME = ?",
+        $sUserOxid = $this->_dbGetOne( "SELECT OXID FROM oxuser WHERE OXUSERNAME = ?",
             array($sUserEmail)
         );
-        if (!$sUserOxid) {
-            $sUserOxid = null;
-        }
         return $sUserOxid;
     }
 
+    /**
+     * searches for country oxid by its ISO number or title
+     * @param $sShopgateCountryId
+     * @param $sCountryName
+     * @return null|string
+     */
     protected function _getCountryId($sShopgateCountryId, $sCountryName)
     {
         $sLangTag = oxLang::getInstance()->getLanguageTag();
-        $sCountryId = $this->_dbGetOne(
-            "SELECT OXID FROM oxcountry WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
+        $sCountryId = $this->_dbGetOne( "SELECT OXID FROM oxcountry WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
             array($sShopgateCountryId, $sCountryName)
         );
-        if (!$sCountryId) {
-            $sCountryId = null;
-        }
         return $sCountryId;
     }
 
+    /**
+     * searches for state oxid by its ISO number or title
+     * @param $sShopgateStateId
+     * @param $sStateName
+     * @return null|string
+     */
     protected function _getStateId($sShopgateStateId, $sStateName)
     {
         $sLangTag = oxLang::getInstance()->getLanguageTag();
-        $sCountryId = $this->_dbGetOne(
-            "SELECT OXID FROM oxstates WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
+        $sCountryId = $this->_dbGetOne( "SELECT OXID FROM oxstates WHERE OXISOALPHA2 = ? OR OXTITLE{$sLangTag} = ?",
             array($sShopgateStateId, $sStateName)
         );
-        if (!$sCountryId) {
-            $sCountryId = null;
-        }
         return $sCountryId;
     }
 

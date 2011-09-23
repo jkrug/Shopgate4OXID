@@ -1801,6 +1801,143 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
     }
 
+    public function test__getUserOxidByEmail()
+    {
+        $sUserEmail = 'some@ema.il';
+        $sExpectedOutput = 'asdfwqer123';
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_dbGetOne'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_dbGetOne')
+            ->with($this->stringContains('SELECT OXID FROM oxuser WHERE OXUSERNAME'), array($sUserEmail))
+            ->will($this->returnValue($sExpectedOutput))
+        ;
+        $this->assertEquals($sExpectedOutput, $oPlugin->_getUserOxidByEmail($sUserEmail));
+    }
+
+    public function test__getCountryId()
+    {
+        $sCode = 'DE';
+        $sName = 'germany';
+        $sExpectedOutput = 'fdsaw21';
+        $sLangTag  = '_1';
+        $oLangMock = $this->getMock(
+            'oxLang',
+            array(
+                'getLanguageTag'
+            )
+        );
+        $oLangMock
+            ->expects($this->once())
+            ->method('getLanguageTag')
+            ->will($this->returnValue($sLangTag))
+        ;
+        $this->_blResetInstances = true;
+        modInstances::addMod('oxLang', $oLangMock);
+
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_dbGetOne'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_dbGetOne')
+            ->with(
+                $this->logicalAnd(
+                    $this->stringContains('oxcountry WHERE OXISOALPHA2 ='),
+                    $this->stringContains("OXTITLE{$sLangTag}")
+                ),
+                array($sCode, $sName)
+            )
+            ->will($this->returnValue($sExpectedOutput))
+        ;
+        $this->assertEquals($sExpectedOutput, $oPlugin->_getCountryId($sCode, $sName));
+
+    }
+
+    public function test__getStateId()
+    {
+        $sCode = 'BE';
+        $sName = 'Berlin';
+        $sExpectedOutput = 'huyasd2243';
+        $sLangTag  = '_1';
+        $oLangMock = $this->getMock(
+            'oxLang',
+            array(
+                'getLanguageTag'
+            )
+        );
+        $oLangMock
+            ->expects($this->once())
+            ->method('getLanguageTag')
+            ->will($this->returnValue($sLangTag))
+        ;
+        $this->_blResetInstances = true;
+        modInstances::addMod('oxLang', $oLangMock);
+
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_dbGetOne'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_dbGetOne')
+            ->with(
+                $this->logicalAnd(
+                    $this->stringContains('oxstates WHERE OXISOALPHA2 ='),
+                    $this->stringContains("OXTITLE{$sLangTag}")
+                ),
+                array($sCode, $sName)
+            )
+            ->will($this->returnValue($sExpectedOutput))
+        ;
+        $this->assertEquals($sExpectedOutput, $oPlugin->_getStateId($sCode, $sName));
+
+    }
+
+    public function test__getArticleByNumber()
+    {
+        $sArtNum = 'n311-w';
+        $sExpectedOutput = 'cdss2as';
+        $sArticleTable = getViewName('oxarticles');
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_dbGetOne'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_dbGetOne')
+            ->with($this->stringContains("SELECT oxid FROM {$sArticleTable} WHERE oxartnum ="), array($sArtNum))
+            ->will($this->returnValue($sExpectedOutput))
+        ;
+        $oArticleMock = $this->getMock(
+            'oxArticle',
+            array(
+                'load'
+            )
+        );
+        $oArticleMock
+            ->expects($this->once())
+            ->method('load')
+            ->with($sExpectedOutput)
+        ;
+        $this->_blResetModules = true;
+        oxTestModules::addModuleObject('oxArticle', $oArticleMock);
+        
+        $this->assertEquals($oArticleMock, $oPlugin->_getArticleByNumber($sArtNum));
+    }
+
     public function test__getActiveCurrency()
     {
         $oConfigMock = $this->getMock(
