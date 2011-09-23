@@ -10,12 +10,32 @@ class ShopgateConnectException extends Exception
 {
     const INVALID_USERNAME_OR_PASSWORD = 100;
 }
+/**
+ * class for dynamic string value, used in mock result values.
+ */
+class StringChanger
+{
+    protected $_sString = '';
+    public function __construct($sString)
+    {
+        $this->setString($sString);
+    }
+    public function setString($sString)
+    {
+        $this->_sString = $sString;
+    }
+    public function __toString()
+    {
+        return $this->_sString;
+    }
+}
 class ShopgateShopCustomer {
     const MALE = 0;
     const FEMALE = 1;
 }
 class ShopgatePluginCore {}
 class ShopgateOrder{}
+class ShopgateOrderAddress{}
 class ShopgateFramework {}
 class ShopgateConfig {
     static public function setConfig(){}
@@ -1258,7 +1278,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertNull($oPlugin->createPagesCsv());
     }
 
-    public function createShopInfo()
+    public function test_createShopInfo()
     {
         //empty function currently
         $oPlugin = $this->getProxyClass('ShopgatePlugin');
@@ -1553,6 +1573,222 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sOrderLang, $oResult->oxorder__oxlang->value);
         $this->assertEquals('FROM_SHOPGATE', $oResult->oxorder__oxtransstatus->value);
         $this->assertEquals('First', $oResult->oxorder__oxfolder->value);
+    }
+
+    public function test__loadOrderContacts()
+    {
+        $oTestOrder = oxNew('oxOrder');
+        $sOrderEmail = 'no@email.here';
+        $sUserId = 'oxiduserid';
+        $oInvoiceAddress = $this->getMock('ShopgateOrderAddress');
+        $oShippingAddress = $this->getMock('ShopgateOrderAddress');
+        $oShopgateOrderMock = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getCustomerMail',
+                'getInvoiceAddress',
+                'getDeliveryAddress'
+            )
+        );
+        $oShopgateOrderMock
+            ->expects($this->once())
+            ->method('getCustomerMail')
+            ->will($this->returnValue($sOrderEmail))
+        ;
+        $oShopgateOrderMock
+            ->expects($this->once())
+            ->method('getInvoiceAddress')
+            ->will($this->returnValue($oInvoiceAddress))
+        ;
+        $oShopgateOrderMock
+            ->expects($this->once())
+            ->method('getDeliveryAddress')
+            ->will($this->returnValue($oShippingAddress))
+        ;
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getUserOxidByEmail',
+                '_loadOrderAddress'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getUserOxidByEmail')
+            ->with($sOrderEmail)
+            ->will($this->returnValue($sUserId))
+        ;
+        $oPlugin
+            ->expects($this->at(1))
+            ->method('_loadOrderAddress')
+            ->with($oTestOrder, $oShopgateOrderMock, 'oxbill', $oInvoiceAddress)
+            ->will($this->returnValue($oTestOrder))
+        ;
+        $oPlugin
+            ->expects($this->at(2))
+            ->method('_loadOrderAddress')
+            ->with($oTestOrder, $oShopgateOrderMock, 'oxdel', $oShippingAddress)
+            ->will($this->returnValue($oTestOrder))
+        ;
+
+        $this->assertEquals($oTestOrder, $oPlugin->_loadOrderContacts($oTestOrder, $oShopgateOrderMock));
+    }
+
+    public function test__loadOrderAddress()
+    {
+        $oContact = new stdClass();
+        $oContact->getCompany= 'corporation_name';
+        $oContact->getFirstName = 'main_name';
+        $oContact->getSurname = 'sur_name';
+        $oContact->getStreet = 'strase';
+        $oContact->getCity = 'hamburg_city';
+        $oContact->getCountry = 'DE';
+        $oContact->getCountryName = 'germany';
+        $oContact->country_oxid = 'oxid_country';
+        $oContact->getState = 'HH';
+        $oContact->getStateName = 'Hamburg';
+        $oContact->state_oxid = 'oxid_state';
+        $oContact->getZipcode = '121223';
+        $oContact->getCustomerPhone = '+4722322212';
+        $oContact->getCustomerFax = '+477777777';
+        $oContact->getCustomerMobile = new StringChanger('+472346789');
+        $oContact->getGender = new StringChanger('m');
+
+        $oTestOrder = oxNew('oxOrder');
+        $oShopgateOrderMock = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getCustomerMobile',
+                'getCustomerPhone',
+                'getCustomerFax'
+            )
+        );
+        $oShopgateOrderMock
+            ->expects($this->atLeastOnce())
+            ->method('getCustomerMobile')
+            ->will($this->returnValue($oContact->getCustomerMobile))
+        ;
+        $oShopgateOrderMock
+            ->expects($this->atLeastOnce())
+            ->method('getCustomerPhone')
+            ->will($this->returnValue($oContact->getCustomerPhone))
+        ;
+        $oShopgateOrderMock
+            ->expects($this->atLeastOnce())
+            ->method('getCustomerFax')
+            ->will($this->returnValue($oContact->getCustomerFax))
+        ;
+        $oShopgateOrderAddressMock = $this->getMock(
+            'ShopgateOrderAddress',
+            array(
+                'getCompany',
+                'getFirstName',
+                'getSurname',
+                'getStreet',
+                'getCity',
+                'getCountry',
+                'getCountryName',
+                'getState',
+                'getStateName',
+                'getZipcode',
+                'getGender'
+            )
+        );
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getCompany')
+                ->will($this->returnValue($oContact->getCompany))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getFirstName')
+                ->will($this->returnValue($oContact->getFirstName))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getSurname')
+                ->will($this->returnValue($oContact->getSurname))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getStreet')
+                ->will($this->returnValue($oContact->getStreet))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getCity')
+                ->will($this->returnValue($oContact->getCity))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getCountry')
+                ->will($this->returnValue($oContact->getCountry))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getCountryName')
+                ->will($this->returnValue($oContact->getCountryName))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getState')
+                ->will($this->returnValue($oContact->getState))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getStateName')
+                ->will($this->returnValue($oContact->getStateName))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getZipcode')
+                ->will($this->returnValue($oContact->getZipcode))
+        ;
+        $oShopgateOrderAddressMock
+                ->expects($this->atLeastOnce())
+                ->method('getGender')
+                ->will($this->returnValue($oContact->getGender))
+        ;
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getCountryId',
+                '_getStateId'
+            )
+        );
+        $oPlugin
+            ->expects($this->atLeastOnce())
+            ->method('_getCountryId')
+            ->with($oContact->getCountry, $oContact->getCountryName)
+            ->will($this->returnValue($oContact->country_oxid))
+         ;
+        $oPlugin
+            ->expects($this->atLeastOnce())
+            ->method('_getStateId')
+            ->with($oContact->getState, $oContact->getStateName)
+            ->will($this->returnValue($oContact->state_oxid))
+         ;
+
+        $oResult = $oPlugin->_loadOrderAddress($oTestOrder, $oShopgateOrderMock, 'oxbill', $oShopgateOrderAddressMock);
+        $this->assertEquals($oTestOrder, $oResult);
+        $this->assertEquals($oContact->getCompany, $oResult->oxorder__oxbillcompany->value);
+        $this->assertEquals($oContact->getFirstName, $oResult->oxorder__oxbillfname->value);
+        $this->assertEquals($oContact->getSurname, $oResult->oxorder__oxbilllname->value);
+        $this->assertEquals($oContact->getStreet, $oResult->oxorder__oxbillstreet->value);
+        $this->assertEquals($oContact->getCity, $oResult->oxorder__oxbillcity->value);
+        $this->assertEquals($oContact->country_oxid, $oResult->oxorder__oxbillcountryid->value);
+        $this->assertEquals($oContact->state_oxid, $oResult->oxorder__oxbillstateid->value);
+        $this->assertEquals($oContact->getZipcode, $oResult->oxorder__oxbillzip->value);
+        $this->assertEquals($oContact->getCustomerMobile->__toString(), $oResult->oxorder__oxbillfon->value);
+        $this->assertEquals($oContact->getCustomerFax, $oResult->oxorder__oxbillfax->value);
+        $this->assertEquals('MR', $oResult->oxorder__oxbillsal->value);
+
+        $oContact->getCustomerMobile->setString('');
+        $oContact->getGender->setString('f');
+        $oResult = $oPlugin->_loadOrderAddress($oTestOrder, $oShopgateOrderMock, 'oxdel', $oShopgateOrderAddressMock);
+        $this->assertEquals($oContact->getCustomerPhone, $oResult->oxorder__oxdelfon->value);
+        $this->assertEquals('MRS', $oResult->oxorder__oxdelsal->value);
+
     }
 
     public function test__getActiveCurrency()

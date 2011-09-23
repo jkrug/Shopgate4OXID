@@ -1061,61 +1061,67 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     protected function _loadOrderContacts(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
     {
-        $sPhone = $oShopgateOrder->getCustomerMobile();
-        if (empty($sPhone)) {
-            $sPhone = $oShopgateOrder->getCustomerPhone();
-        }
-        $oOxidOrder->oxorder__oxuserid       = new oxField($this->_getUserOxidByEmail($oShopgateOrder->getCustomerMail()), oxField::T_RAW);
+        $sOrderEmail = $oShopgateOrder->getCustomerMail();
+        $oOxidOrder->oxorder__oxuserid       = new oxField($this->_getUserOxidByEmail($sOrderEmail), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxbillemail       = new oxField($sOrderEmail, oxField::T_RAW);
 
         $oInvoiceAddress = $oShopgateOrder->getInvoiceAddress();
-        // bill address
-        $oOxidOrder->oxorder__oxbillcompany     = new oxField($oInvoiceAddress->getCompany(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillemail       = new oxField($oShopgateOrder->getCustomerMail(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillfname       = new oxField($oInvoiceAddress->getFirstName(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbilllname       = new oxField($oInvoiceAddress->getSurname(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillstreet      = new oxField($oInvoiceAddress->getStreet(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillcity        = new oxField($oInvoiceAddress->getCity(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillcountryid   = new oxField(
-            $this->_getCountryId($oInvoiceAddress->getCountry(), $oInvoiceAddress->getCountryName()),
-            oxField::T_RAW
+        $oOxidOrder = $this->_loadOrderAddress( $oOxidOrder,
+            $oShopgateOrder,
+            'oxbill',
+            $oInvoiceAddress
         );
-        $oOxidOrder->oxorder__oxbillstateid   = new oxField(
-            $this->_getCountryId($oInvoiceAddress->getState(), $oInvoiceAddress->getStateName()),
-            oxField::T_RAW
-        );
-        $oOxidOrder->oxorder__oxbillzip         = new oxField($oInvoiceAddress->getZipcode(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillfon         = new oxField($sPhone, oxField::T_RAW);
-        $oOxidOrder->oxorder__oxbillfax         = new oxField($oShopgateOrder->getCustomerFax(), oxField::T_RAW);
-        if (strtolower($oInvoiceAddress->getGender()) == 'm') {
-        $oOxidOrder->oxorder__oxbillsal         = new oxField('MR', oxField::T_RAW);
-        }
-        elseif (strtolower($oInvoiceAddress->getGender()) == 'f') {
-            $oOxidOrder->oxorder__oxbillsal         = new oxField('MRS', oxField::T_RAW);
-        }
 
-        $oDelAdress = $oShopgateOrder->getDeliveryAddress();
+        $oDelAddress = $oShopgateOrder->getDeliveryAddress();
+        $oOxidOrder = $this->_loadOrderAddress( $oOxidOrder,
+            $oShopgateOrder,
+            'oxdel',
+            $oDelAddress
+        );
 
-        $oOxidOrder->oxorder__oxdelcompany     = new oxField($oDelAdress->getCompany(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdelfname       = new oxField($oDelAdress->getFirstName(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdellname       = new oxField($oDelAdress->getSurname(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdelstreet      = new oxField($oDelAdress->getStreet(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdelcity        = new oxField($oDelAdress->getCity(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdelcountryid   = new oxField(
-            $this->_getCountryId($oDelAdress->getCountry(), $oDelAdress->getCountryName()),
-            oxField::T_RAW
-        );
-        $oOxidOrder->oxorder__oxdelstateid   = new oxField(
-            $this->_getCountryId($oDelAdress->getState(), $oDelAdress->getStateName()),
-            oxField::T_RAW
-        );
-        $oOxidOrder->oxorder__oxdelzip         = new oxField($oDelAdress->getZipcode(), oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdelfon         = new oxField($sPhone, oxField::T_RAW);
-        $oOxidOrder->oxorder__oxdelfax         = new oxField($oShopgateOrder->getCustomerFax(), oxField::T_RAW);
-        if (strtolower($oDelAdress->getGender()) == 'm') {
-        $oOxidOrder->oxorder__oxdelsal         = new oxField('MR', oxField::T_RAW);
+        return $oOxidOrder;
+    }
+
+    /**
+     * load contact details from shopgate order address to oxid
+     * @param oxOrder $oOxidOrder where to store data
+     * @param ShopgateOrder $oShopgateOrder main order object
+     * @param string $sTarget oxbill or oxdel
+     * @param ShopgateOrderAddress $oShopgateOrderAddress address fields taken from
+     * @return oxOrder changed oxorder
+     */
+    protected function _loadOrderAddress(
+        oxOrder $oOxidOrder,
+        ShopgateOrder $oShopgateOrder,
+        $sTarget,
+        ShopgateOrderAddress $oShopgateOrderAddress
+    )
+    {
+        $sPhone = (string) $oShopgateOrder->getCustomerMobile();
+        if (empty($sPhone)) {
+            $sPhone = (string) $oShopgateOrder->getCustomerPhone();
         }
-        elseif (strtolower($oInvoiceAddress->getGender()) == 'f') {
-            $oOxidOrder->oxorder__oxdelsal         = new oxField('MRS', oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}company"}     = new oxField($oShopgateOrderAddress->getCompany(), oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}fname"}       = new oxField($oShopgateOrderAddress->getFirstName(), oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}lname"}       = new oxField($oShopgateOrderAddress->getSurname(), oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}street"}      = new oxField($oShopgateOrderAddress->getStreet(), oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}city"}        = new oxField($oShopgateOrderAddress->getCity(), oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}countryid"}   = new oxField(
+            $this->_getCountryId($oShopgateOrderAddress->getCountry(), $oShopgateOrderAddress->getCountryName()),
+            oxField::T_RAW
+        );
+        $oOxidOrder->{"oxorder__{$sTarget}stateid"}   = new oxField(
+            $this->_getStateId($oShopgateOrderAddress->getState(), $oShopgateOrderAddress->getStateName()),
+            oxField::T_RAW
+        );
+        $oOxidOrder->{"oxorder__{$sTarget}zip"}         = new oxField($oShopgateOrderAddress->getZipcode(), oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}fon"}         = new oxField($sPhone, oxField::T_RAW);
+        $oOxidOrder->{"oxorder__{$sTarget}fax"}         = new oxField($oShopgateOrder->getCustomerFax(), oxField::T_RAW);
+        if (strtolower($oShopgateOrderAddress->getGender()) == 'm') {
+        $oOxidOrder->{"oxorder__{$sTarget}sal"}         = new oxField('MR', oxField::T_RAW);
+        }
+        elseif (strtolower($oShopgateOrderAddress ->getGender()) == 'f') {
+            $oOxidOrder->{"oxorder__{$sTarget}sal"}         = new oxField('MRS', oxField::T_RAW);
         }
 
         return $oOxidOrder;
