@@ -28,10 +28,10 @@
         <dl>
             <dt>
                 [{if $aConfigItem.type == 'checkbox'}]
-                <input type=hidden name=confbools[[{$aConfigItem.oxid_name}]] value=false>
-                <input type=checkbox name=confbools[[{$aConfigItem.oxid_name}]] value=true [{if ($aConfigItem.value)}]checked[{/if}] [{ $readonly}]>
+                <input type="hidden" name="confbools[[{$aConfigItem.oxid_name}]]" value="false">
+                <input type="checkbox" name="confbools[[{$aConfigItem.oxid_name}]]" value="true" [{if ($aConfigItem.value)}]checked="checked"[{/if}] [{ $readonly}]>
                 [{else}][{*  if $aConfigItem.type == 'input'  *}]
-                <input type=text class="txt" name=confstrs[[{$aConfigItem.oxid_name}]] value="[{$aConfigItem.value}]" [{ $readonly}]>
+                <input type="text" class="txt" name="confstrs[[{$aConfigItem.oxid_name}]]" value="[{$aConfigItem.value}]" [{ $readonly}]>
                 [{/if}]
                 [{ oxinputhelp ident="MARM_SHOPGATE_CONFIG_"|cat:$aConfigItem.shopgate_name|upper|cat:"_HELP" }]
             </dt>
