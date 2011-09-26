@@ -230,4 +230,27 @@ class marm_shopgate
         $sEnd = substr($sHash, -3);
         return 'marm_shopgate_'.$sStart.$sEnd;
     }
+
+    /**
+     * outputs HTML SCRIPT tag for shopgate mobile javascript redirect
+     * @return string
+     */
+    public function getMobileSnippet()
+    {
+        $sSnippet = '';
+        $oOxidConfig = oxConfig::getInstance();
+        if ( $oOxidConfig->getConfigParam($this->getOxidConfigKey('enable_mobile_website')) ) {
+            $iShopNumber = $oOxidConfig->getConfigParam($this->getOxidConfigKey('shop_number'));
+            $sSnippet  = '<script type="text/javascript">'."\n";
+            $sSnippet .= 'var _shopgate = {}; '."\n";
+            $sSnippet .= '_shopgate.shop_number = "'.$iShopNumber.'"; '."\n";
+            $sSnippet .= '_shopgate.host = (("https:" == document.location.protocol) ? "';
+            $sSnippet .= 'https://static-ssl.shopgate.com" : "http://static.shopgate.com"); '."\n";
+            $sSnippet .= 'document.write(unescape("%3Cscript src=\'" + _shopgate.host + ';
+            $sSnippet .= '"/mobile_header/" + _shopgate.shop_number + ".js\' ';
+            $sSnippet .= 'type=\'text/javascript\' %3E%3C/script%3E")); '."\n";
+            $sSnippet .= '</script>';
+        }
+        return $sSnippet;
+    }
 }

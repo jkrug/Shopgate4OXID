@@ -236,4 +236,46 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $this->assertEquals('marm_shopgate_9af98d', $oMarmShopgate->getOxidConfigKey('apikey'));
     }
 
+    public function test_getMobileSnippet()
+    {
+        $aOxidConfig = array(
+            'disabled_mobile' => false,
+            'enabled_mobile' => true,
+            'shopgate_shop_number' => '123321'
+        );
+        $oMarmShopgate = $this->getMock(
+            'marm_shopgate',
+            array(
+                'getOxidConfigKey'
+            )
+        );
+        $oMarmShopgate
+            ->expects($this->at(0))
+            ->method('getOxidConfigKey')
+            ->with('enable_mobile_website')
+            ->will($this->returnValue('disabled_mobile'))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(1))
+            ->method('getOxidConfigKey')
+            ->with('enable_mobile_website')
+            ->will($this->returnValue('enabled_mobile'))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(2))
+            ->method('getOxidConfigKey')
+            ->with('shop_number')
+            ->will($this->returnValue('shopgate_shop_number'))
+        ;
+        foreach ($aOxidConfig as $sKey => $sValue) {
+            modConfig::getInstance()->setConfigParam($sKey, $sValue);
+        }
+
+        $this->assertEquals('', $oMarmShopgate->getMobileSnippet());
+        $aSecondResult = $oMarmShopgate->getMobileSnippet();
+        $this->assertContains($aOxidConfig['shopgate_shop_number'], $aSecondResult);
+        $this->assertContains('shopgate.com', $aSecondResult);
+
+    }
+
 }

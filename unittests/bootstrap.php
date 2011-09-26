@@ -55,8 +55,10 @@ if (getenv('CODECOVERAGE')) {
     PHPUnit_Util_Filter::addFileToWhitelist(oxPATH.'/admin/marm_shopgate_article.php');
     PHPUnit_Util_Filter::addFileToWhitelist(oxPATH.'/admin/marm_shopgate_config.php');
     PHPUnit_Util_Filter::addFileToWhitelist(oxPATH.'/core/marm_shopgate.php');
+    PHPUnit_Util_Filter::addFileToWhitelist(oxPATH.'/modules/marm/shopgate/marm_shopgate_oxoutput.php');
     PHPUnit_Util_Filter::addFileToWhitelist(oxPATH.'/shopgate/plugins/plugin_oxid.inc.php');
     PHPUnit_Util_Filter::addFileToWhitelist(oxPATH.'/views/marm_shopgate_api.php');
+//return;
 
     PHPUnit_Util_Filter::addDirectoryToWhitelist(oxPATH.'/admin');
     PHPUnit_Util_Filter::addDirectoryToWhitelist(oxPATH.'/core');
