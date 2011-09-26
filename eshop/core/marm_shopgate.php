@@ -173,7 +173,8 @@ class marm_shopgate
         $aConfig = array();
         $oConfig = oxConfig::getInstance();
         foreach ($this->_getConfig() as $sConfigKey => $sType) {
-            if ($sValue = $oConfig->getConfigParam('marm_shopgate_'.$sConfigKey)) {
+            $sValue = $oConfig->getConfigParam($this->getOxidConfigKey($sConfigKey));
+            if ($sValue !== null) {
                 $aConfig[$sConfigKey] = $sValue;
             }
         }
@@ -201,18 +202,32 @@ class marm_shopgate
         foreach ($this->_getConfig() as $sConfigKey => $sType) {
 
             if ($sConfigKey == 'plugin')  continue;
-
-            $sValue = $oOxidConfig->getConfigParam('marm_shopgate_'.$sConfigKey);
-            if (!$sValue) {
+            $sOxidConfigKey = $this->getOxidConfigKey($sConfigKey);
+            $sValue = $oOxidConfig->getConfigParam($sOxidConfigKey);
+            if ($sValue === null) {
                 $sValue = $aShopgateConfig[$sConfigKey];
             }
             $aConfig[$sConfigKey] = array (
-                'oxid_name'     => 'marm_shopgate_'.$sConfigKey,
+                'oxid_name'     => $sOxidConfigKey,
                 'shopgate_name' => $sConfigKey,
                 'type' => $sType,
                 'value' => $sValue
             );
         }
         return $aConfig;
+    }
+
+    /**
+     * will generate key name on which oxid will 
+     * @param $sShopgateConfigKey
+     * @return string
+     */
+    public function getOxidConfigKey($sShopgateConfigKey)
+    {
+        $sShopgateConfigKey = strtolower($sShopgateConfigKey);
+        $sHash = md5($sShopgateConfigKey);
+        $sStart = substr($sHash, 0, 3);
+        $sEnd = substr($sHash, -3);
+        return 'marm_shopgate_'.$sStart.$sEnd;
     }
 }

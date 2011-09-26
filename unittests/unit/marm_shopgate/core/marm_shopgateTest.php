@@ -146,14 +146,15 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             'plugin' => false
         );
         $aOxidConfig = array(
-            'marm_shopgate_customer_number' => 123321,
-            'marm_shopgate_shop_number' => 54321,
-            'marm_shopgate_apikey' => 'asdffdassfd'
+            'customer_number' => 123321,
+            'shop_number' => 54321,
+            'apikey' => 'asdffdassfd'
         );
         $oMarmShopgate = $this->getMock(
             $this->getProxyClassName('marm_shopgate'),
             array(
-                '_getConfig'
+                '_getConfig',
+                'getOxidConfigKey'
             )
         );
         $oMarmShopgate
@@ -161,14 +162,20 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             ->method('_getConfig')
             ->will($this->returnValue($aRequiredKeys))
         ;
+        $oMarmShopgate
+            ->expects($this->atLeastOnce())
+            ->method('getOxidConfigKey')
+            ->will($this->returnArgument(0))
+        ;
+
         foreach ($aOxidConfig as $sKey => $sValue) {
             modConfig::getInstance()->setConfigParam($sKey, $sValue);
         }
         $aResult = $oMarmShopgate->_getConfigForFramework();
         $this->assertTrue(is_array($aResult));
-        $this->assertEquals($aOxidConfig['marm_shopgate_customer_number'], $aResult['customer_number']);
-        $this->assertEquals($aOxidConfig['marm_shopgate_shop_number'], $aResult['shop_number']);
-        $this->assertEquals($aOxidConfig['marm_shopgate_apikey'], $aResult['apikey']);
+        $this->assertEquals($aOxidConfig['customer_number'], $aResult['customer_number']);
+        $this->assertEquals($aOxidConfig['shop_number'], $aResult['shop_number']);
+        $this->assertEquals($aOxidConfig['apikey'], $aResult['apikey']);
         $this->assertEquals('oxid', $aResult['plugin']);
     }
 
@@ -192,7 +199,8 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             'marm_shopgate',
             array(
                 '_getConfig',
-                'init'
+                'init',
+                'getOxidConfigKey'
             )
         );
         $oMarmShopgate
@@ -204,6 +212,10 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             ->expects($this->once())
             ->method('init')
         ;
+        $oMarmShopgate
+            ->expects($this->atLeastOnce())
+            ->method('getOxidConfigKey')
+            ->will($this->returnValue('marmshopgateconfigkey'));
         foreach ($aOxidConfig as $sKey => $sValue) {
             modConfig::getInstance()->setConfigParam($sKey, $sValue);
         }
@@ -212,6 +224,16 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $this->assertEquals('https://api.shopgate.com/shopgateway/api/', $aResult['api_url']['value']);
         $this->assertEquals('input', $aResult['apikey']['type']);
         $this->assertEquals('checkbox', $aResult['shop_number']['type']);
-        $this->assertStringStartsWith('marm_shopgate_', $aResult['apikey']['oxid_name']);
+        $this->assertEquals('marmshopgateconfigkey', $aResult['apikey']['oxid_name']);
     }
+
+    public function test_getOxidConfigKey()
+    {
+        $oMarmShopgate = $this->getProxyClass('marm_shopgate');
+        $this->assertEquals('marm_shopgate_ef3d8d', $oMarmShopgate->getOxidConfigKey('customer_number'));
+        $this->assertEquals('marm_shopgate_8f5c42', $oMarmShopgate->getOxidConfigKey('shop_number'));
+        $this->assertEquals('marm_shopgate_9af98d', $oMarmShopgate->getOxidConfigKey('APIKEY'));
+        $this->assertEquals('marm_shopgate_9af98d', $oMarmShopgate->getOxidConfigKey('apikey'));
+    }
+
 }
