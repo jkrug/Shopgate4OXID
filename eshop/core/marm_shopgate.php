@@ -253,4 +253,38 @@ class marm_shopgate
         }
         return $sSnippet;
     }
+
+    /**
+     * executes ShopgateOrderApi::setShippingComplete()
+     * @param int $sShopgateOrderId
+     * @return void
+     */
+    public function setOrderShippingCompleted($sShopgateOrderId)
+    {
+        $this->init();
+        $oShopgateOrderApi = oxNew('ShopgateOrderApi');
+        try {
+            $oShopgateOrderApi->setShippingComplete($sShopgateOrderId);
+        }
+        catch(ShopgateFrameworkException $oEx) {
+
+            /** @var $oOxidEx  oxException*/
+            $oOxidEx = oxNew('oxException');
+            $oOxidEx->setMessage($oEx->getMessage());
+
+            if (!isset($oEx->lastResponse)) {
+                throw $oOxidEx;
+            }
+            $aLastResponse = $oEx->lastResponse;
+            if (!is_array($aLastResponse)) {
+                throw $oOxidEx;
+            }
+            if (!isset($aLastResponse['error'])) {
+                throw $oOxidEx;
+            }
+            if ($aLastResponse['error'] != 204 && $aLastResponse['error'] != 203 ) {
+                throw $oOxidEx;
+            }
+        }
+    }
 }

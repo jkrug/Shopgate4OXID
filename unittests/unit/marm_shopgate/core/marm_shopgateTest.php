@@ -6,6 +6,7 @@ require_once 'unit/test_config.inc.php';
 class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
 {
     protected $_oOldMarmShopgateInstance = null;
+    protected $_blResetModules   = false;
 
     public function tearDown()
     {
@@ -14,6 +15,11 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             $this->_oOldMarmShopgateInstance = null;
         }
         unset($_GLOBAL['marm_shopgate_include_counter']);
+        if ($this->_blResetModules) {
+            $this->_blResetModules = false;
+            oxTestModules::cleanUp();
+        }
+
     }
 
     public function test__getFrameworkDir()
@@ -276,6 +282,85 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $this->assertContains($aOxidConfig['shopgate_shop_number'], $aSecondResult);
         $this->assertContains('shopgate.com', $aSecondResult);
 
+    }
+
+    public function test_setOrderShippingCompleted()
+    {
+        $iShopgateOrderId = '1223321123';
+        $sExceptionMessage = 'testmessage';
+        $oShopgateFrameworkException = new ShopgateFrameworkException('testmessage');
+        $oMarmShopgate = $this->getMock(
+            'marm_shopgate',
+            array(
+                 'init'
+            )
+        );
+        $oMarmShopgate
+                ->expects($this->atLeastOnce())
+                ->method('init')
+        ;
+        $oShopgateOrderApiMock = $this->getMock(
+            'ShopgateOrderApi',
+            array(
+                'setShippingComplete'
+            )
+        );
+        $oShopgateOrderApiMock
+            ->expects($this->at(0))
+            ->method('setShippingComplete')
+            ->with($iShopgateOrderId)
+            ->will($this->returnValue(null))
+        ;
+        $this->_blResetModules = true;
+        oxTestModules::addModuleObject('ShopgateOrderApi', $oShopgateOrderApiMock);
+
+        // normal call
+        $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
+
+        //exceptions
+        $oShopgateOrderApiMock
+                ->expects($this->any())
+                ->method('setShippingComplete')
+                ->with($iShopgateOrderId)
+                ->will($this->throwException($oShopgateFrameworkException))
+        ;
+        try {
+            $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
+            $this->fail('exception expected');
+        }
+        catch (oxException $oEx){
+            $this->assertEquals($sExceptionMessage, $oEx->getMessage());
+        }
+        $oShopgateFrameworkException->lastResponse = 'string';
+        try {
+            $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
+            $this->fail('exception expected');
+        }
+        catch (oxException $oEx){
+            $this->assertEquals($sExceptionMessage, $oEx->getMessage());
+        }
+        $oShopgateFrameworkException->lastResponse = array();
+        try {
+            $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
+            $this->fail('exception expected');
+        }
+        catch (oxException $oEx){
+            $this->assertEquals($sExceptionMessage, $oEx->getMessage());
+        }
+        $oShopgateFrameworkException->lastResponse = array('error'=>202);
+        try {
+            $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
+            $this->fail('exception expected');
+        }
+        catch (oxException $oEx){
+            $this->assertEquals($sExceptionMessage, $oEx->getMessage());
+        }
+
+        // do not react to errors 203 and 204
+        $oShopgateFrameworkException->lastResponse = array('error'=>204);
+        $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
+        $oShopgateFrameworkException->lastResponse = array('error'=>203);
+        $oMarmShopgate->setOrderShippingCompleted($iShopgateOrderId);
     }
 
 }

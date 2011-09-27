@@ -25,6 +25,7 @@ class unit_marm_shopgate_AllTests extends PHPUnit_Framework_TestCase
 //            'unit/marm_shopgate/admin/marm_shopgate_configTest.php',
 //            'unit/marm_shopgate/core/marm_shopgateTest.php',
 //            'unit/marm_shopgate/modules/marm/shopgate/marm_shopgate_oxoutputTest.php',
+//            'unit/marm_shopgate/modules/marm/shopgate/marm_shopgate_oxorderTest.php',
 //            'unit/marm_shopgate/shopgate/plugins/plugin_oxidTest.php',
 //            'unit/marm_shopgate/views/marm_shopgate_apiTest.php',
         );
