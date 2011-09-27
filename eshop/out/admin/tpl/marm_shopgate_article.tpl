@@ -61,12 +61,12 @@ function editThis( sID )
         <table cellspacing="0" cellpadding="0" border="0">
           <tr>
             <td class="edittext">
-              [{ oxmultilang ident="MARM_SHOPGATE_ARTICLE_MARETPLACE" }]
+              [{ oxmultilang ident="MARM_SHOPGATE_ARTICLE_MARKETPLACE" }]
             </td>
             <td class="edittext">
                 <input class="edittext" type="hidden" name="editval[oxarticles__marm_shopgate_marketplace]" value='0'>
                 <input class="edittext" type="checkbox" name="editval[oxarticles__marm_shopgate_marketplace]" value='1' [{if $edit->oxarticles__marm_shopgate_marketplace->value == 1}]checked[{/if}] [{ $readonly }]>
-                [{ oxinputhelp ident="MARM_SHOPGATE_ARTICLE_MARETPLACE_HELP" }]
+                [{ oxinputhelp ident="MARM_SHOPGATE_ARTICLE_MARKETPLACE_HELP" }]
             </td>
           </tr>
             <tr>
