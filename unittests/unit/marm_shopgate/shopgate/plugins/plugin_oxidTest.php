@@ -1562,13 +1562,25 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
 
     public function test__loadOrderAdditionalInfo()
     {
+        $iShopgateOrderId = 1231231234;
         $sOrderLang = 1;
         $aOrderFolders = array(
             'First' => 'one',
             'Second' => 'one'
         );
         modConfig::getInstance()->setConfigParam('aOrderfolder', $aOrderFolders);
-        $oShopgateOrder = $this->getMock('ShopgateOrder');
+        $oShopgateOrder = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getOrderNumber'
+            )
+        );
+        $oShopgateOrder
+            ->expects($this->once())
+            ->method('getOrderNumber')
+            ->will($this->returnValue($iShopgateOrderId))
+        ;
+
         $oPlugin = $this->getProxyClass('ShopgatePlugin');
         $oOrderMock = $this->getMock(
             'oxOrder',
@@ -1585,6 +1597,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sOrderLang, $oResult->oxorder__oxlang->value);
         $this->assertEquals('FROM_SHOPGATE', $oResult->oxorder__oxtransstatus->value);
         $this->assertEquals('First', $oResult->oxorder__oxfolder->value);
+        $this->assertEquals($iShopgateOrderId, $oResult->oxorder__marm_shopgate_order_number->value);
     }
 
     public function test__loadOrderContacts()

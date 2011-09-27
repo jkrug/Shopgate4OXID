@@ -1065,6 +1065,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         $oOxidOrder->oxorder__oxtransstatus = new oxField('FROM_SHOPGATE', oxField::T_RAW);
         $oOxidOrder->oxorder__oxfolder      = new oxField(key( oxConfig::getInstance()->getConfigParam(  'aOrderfolder' ) ), oxField::T_RAW);
+        $oOxidOrder->oxorder__marm_shopgate_order_number = new oxField($oShopgateOrder->getOrderNumber(), oxField::T_RAW);
 
         return $oOxidOrder;
     }
