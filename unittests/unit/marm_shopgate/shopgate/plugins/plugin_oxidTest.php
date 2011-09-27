@@ -29,6 +29,7 @@ class StringChanger
         return $this->_sString;
     }
 }
+class ShopgateFrameworkException extends Exception{}
 class ShopgateShopCustomer {
     const MALE = 0;
     const FEMALE = 1;
@@ -38,6 +39,7 @@ class ShopgateOrder{}
 class ShopgateOrderAddress{}
 class ShopgateOrderItem{}
 class ShopgateOrderItemOption{}
+class ShopgateOrderApi{}
 class ShopgateFramework {}
 class ShopgateConfig {
     static public function setConfig(){}
