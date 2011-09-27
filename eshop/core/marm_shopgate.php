@@ -8,27 +8,36 @@ class marm_shopgate
      * @var array
      */
     protected $_aConfig = array(
-        'customer_number' => 'input',
-        'shop_number' => 'input',
-        'apikey' => 'input',
-        'plugin' => false,
-        'enable_ping' => 'checkbox',
-        'enable_get_shop_info' => 'checkbox',
-        'enable_http_alert' => 'checkbox',
-        'enable_connect' => 'checkbox',
-        'enable_get_items_csv' => 'checkbox',
-        'enable_get_reviews_csv' => 'checkbox',
-        'enable_get_pages_csv' => 'checkbox',
-        'enable_get_log_file' => 'checkbox',
-        'enable_mobile_website' => 'checkbox',
-        'generate_items_csv_on_the_fly' => 'checkbox',
-        'max_attributes' => 'input',
-        'use_custom_error_handler' => 'checkbox',
-        'use_stock' => 'checkbox',
-        'shop_is_active' => 'checkbox',
-        'background_color' => 'input',
-        'foreground_color' => 'input',
-        'server' => 'input'
+        'shop_is_active' => array('type' => 'checkbox', 'group' => 'general'),
+        'customer_number' => array('type'=>'input', 'group' => 'general'),
+        'shop_number' => array('type' => 'input', 'group' => 'general'),
+        'apikey' => array('type' => 'input', 'group' => 'general'),
+        'generate_items_csv_on_the_fly' => array('type' => 'checkbox', 'group' => 'general'),
+        'enable_ping' => array('type' => 'checkbox', 'group' => 'permissions'),
+        'enable_get_shop_info' => array('type' => 'checkbox', 'group' => 'permissions'),
+        'enable_http_alert' => array('type' => 'checkbox', 'group' => 'permissions'),
+        'enable_connect' => array('type' => 'checkbox', 'group' => 'permissions'),
+        'enable_get_items_csv' => array('type' => 'checkbox', 'group' => 'permissions'),
+        'enable_mobile_website' => array('type' => 'checkbox', 'group' => 'mobileweb'),
+        'server' => array(
+            'type' => 'select',
+            'options' => array (
+                'live',
+                'pg',
+                'custom'
+            ),
+            'group' => 'debug'
+        ),
+        'server_custom_url' => array('type' => 'input', 'group' => 'debug'),
+//        'enable_get_reviews_csv' => array('type' => 'checkbox'),
+//        'enable_get_pages_csv' => array('type' => 'checkbox'),
+//        'enable_get_log_file' => array('type' => 'checkbox'),
+//        'max_attributes' => array('type' => 'input'),
+//        'use_custom_error_handler' => array('type' => 'checkbox'),
+//        'use_stock' => array('type' => 'checkbox'),
+//        'background_color' => array('type' => 'input'),
+//        'foreground_color' => array('type' => 'input'),
+        'plugin' => array('type' => false),
     );
 
     /**
@@ -172,7 +181,7 @@ class marm_shopgate
     {
         $aConfig = array();
         $oConfig = oxConfig::getInstance();
-        foreach ($this->_getConfig() as $sConfigKey => $sType) {
+        foreach ($this->_getConfig() as $sConfigKey => $aOptions) {
             $sValue = $oConfig->getConfigParam($this->getOxidConfigKey($sConfigKey));
             if ($sValue !== null) {
                 $aConfig[$sConfigKey] = $sValue;
@@ -188,7 +197,7 @@ class marm_shopgate
      * array(
      *   [oxid_name] => marm_shopgate_customer_number
      *   [shopgate_name] => customer_number
-     *   [type] => checkbox|input
+     *   [type] => checkbox|input|select
      *   [value] => 1234567890
      * )
      * @return array
@@ -199,7 +208,7 @@ class marm_shopgate
         $oOxidConfig = oxConfig::getInstance();
         $this->init();
         $aShopgateConfig = ShopgateConfig::getConfig();
-        foreach ($this->_getConfig() as $sConfigKey => $sType) {
+        foreach ($this->_getConfig() as $sConfigKey => $aOptions) {
 
             if ($sConfigKey == 'plugin')  continue;
             $sOxidConfigKey = $this->getOxidConfigKey($sConfigKey);
@@ -207,12 +216,10 @@ class marm_shopgate
             if ($sValue === null) {
                 $sValue = $aShopgateConfig[$sConfigKey];
             }
-            $aConfig[$sConfigKey] = array (
-                'oxid_name'     => $sOxidConfigKey,
-                'shopgate_name' => $sConfigKey,
-                'type' => $sType,
-                'value' => $sValue
-            );
+            $aOptions['oxid_name'] = $sOxidConfigKey;
+            $aOptions['shopgate_name'] = $sConfigKey;
+            $aOptions['value'] = $sValue;
+            $aConfig[$aOptions['group']][$sConfigKey] = $aOptions;
         }
         return $aConfig;
     }

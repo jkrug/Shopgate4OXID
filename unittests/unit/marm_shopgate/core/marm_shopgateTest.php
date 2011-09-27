@@ -187,12 +187,13 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
 
     public function test_getConfigForAdminGui()
     {
+        $sDefaultGroup = 'general';
         $aRequiredKeys = array(
-            'customer_number' => false,
-            'shop_number' => 'checkbox',
-            'apikey' => 'input',
-            'plugin' => false,
-            'api_url' => false
+            'customer_number' => array('type' => 'input', 'group' => $sDefaultGroup),
+            'shop_number' => array('type' => 'checkbox', 'group' => $sDefaultGroup),
+            'apikey' => array('type' => 'input', 'group' => $sDefaultGroup),
+            'plugin' => array('type' => false, 'group' => $sDefaultGroup),
+            'api_url' => array('type' => 'input', 'group' => $sDefaultGroup)
         );
         $aOxidConfig = array(
             'marm_shopgate_customer_number' => 123321,
@@ -226,11 +227,11 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             modConfig::getInstance()->setConfigParam($sKey, $sValue);
         }
         $aResult = $oMarmShopgate->getConfigForAdminGui();
-        $this->assertArrayNotHasKey('plugin', $aResult);
-        $this->assertEquals('https://api.shopgate.com/shopgateway/api/', $aResult['api_url']['value']);
-        $this->assertEquals('input', $aResult['apikey']['type']);
-        $this->assertEquals('checkbox', $aResult['shop_number']['type']);
-        $this->assertEquals('marmshopgateconfigkey', $aResult['apikey']['oxid_name']);
+        $this->assertArrayNotHasKey('plugin', $aResult[$sDefaultGroup]);
+        $this->assertEquals('https://api.shopgate.com/shopgateway/api/', $aResult[$sDefaultGroup]['api_url']['value']);
+        $this->assertEquals('input', $aResult[$sDefaultGroup]['apikey']['type']);
+        $this->assertEquals('checkbox', $aResult[$sDefaultGroup]['shop_number']['type']);
+        $this->assertEquals('marmshopgateconfigkey', $aResult[$sDefaultGroup]['apikey']['oxid_name']);
     }
 
     public function test_getOxidConfigKey()
