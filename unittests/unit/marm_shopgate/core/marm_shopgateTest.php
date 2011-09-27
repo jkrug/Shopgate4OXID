@@ -73,7 +73,8 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             'marm_shopgate',
             array(
                 '_getFilesToInclude',
-                '_getLibraryDir'
+                '_getLibraryDir',
+                '_getConfigForFramework'
             )
         );
         $oMarmShopgate
@@ -85,6 +86,10 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             ->expects($this->exactly(2))
             ->method('_getLibraryDir')
             ->will($this->returnValue($sIncludeDir))
+        ;
+        $oMarmShopgate
+            ->expects($this->exactly(2))
+            ->method('_getConfigForFramework')
         ;
         $GLOBALS['marm_shopgate_include_counter'] = 0;
 
@@ -104,18 +109,13 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $oMarmShopgate = $this->getMock(
             'marm_shopgate',
             array(
-                 'init',
-                '_getConfigForFramework'
+                 'init'
             )
         );
 
         $oMarmShopgate
             ->expects($this->exactly(2))
             ->method('init')
-        ;
-        $oMarmShopgate
-            ->expects($this->exactly(2))
-            ->method('_getConfigForFramework')
         ;
         $this->assertTrue($oMarmShopgate->getFramework() instanceof shopgateFramework);
         $this->assertTrue($oMarmShopgate->getFramework() instanceof shopgateFramework);

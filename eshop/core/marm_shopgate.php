@@ -132,6 +132,7 @@ class marm_shopgate
                 require_once $sFile;
             }
         }
+        ShopgateConfig::setConfig($this->_getConfigForFramework());
     }
 
 
@@ -149,7 +150,6 @@ class marm_shopgate
             return $this->_oShopgateFramework;
         }
         $this->init();
-        ShopgateConfig::setConfig($this->_getConfigForFramework());
 
         $this->_oShopgateFramework = oxNew('ShopgateFramework');
         return $this->_oShopgateFramework;
