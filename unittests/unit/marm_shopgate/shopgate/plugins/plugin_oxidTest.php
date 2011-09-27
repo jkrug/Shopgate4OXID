@@ -1450,11 +1450,17 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $oPlugin = $this->getMock(
             $this->getProxyClassName('ShopgatePlugin'),
             array(
+                '_checkOrder',
                 '_executeLoaders',
                 '_getOrderImportLoaders',
                 '_saveOrderArticles'
             )
         );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_checkOrder')
+            ->with($oShopgateOrder)
+        ;
         $oPlugin
             ->expects($this->once())
             ->method('_getOrderImportLoaders')
@@ -2230,5 +2236,51 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($oCur1->name, $oPlugin->_getActiveCurrency());
         $this->assertEquals($oCur1->name, $oPlugin->_getActiveCurrency());
         $this->assertEquals($oCur2->name, $oPlugin->_getActiveCurrency(true));
+    }
+
+    public function test__checkOrder()
+    {
+        $sShopgateOrderId = 1231231234;
+        $sStoredOrderId = '321';
+        $oShopgateOrderMock = $this->getMock(
+            'ShopgateOrder',
+            array(
+                'getOrderNumber'
+            )
+        );
+        $oShopgateOrderMock
+            ->expects($this->exactly(2))
+            ->method('getOrderNumber')
+            ->will($this->returnValue($sShopgateOrderId))
+        ;
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_dbGetOne'
+            )
+        );
+        $oPlugin
+            ->expects($this->at(0))
+            ->method('_dbGetOne')
+            ->with($this->stringContains('oxorder WHERE marm_shopgate_order_number ='), array($sShopgateOrderId))
+            ->will($this->returnValue($sStoredOrderId))
+        ;
+        $oPlugin
+            ->expects($this->at(1))
+            ->method('_dbGetOne')
+            ->with($this->stringContains('oxorder WHERE marm_shopgate_order_number ='), array($sShopgateOrderId))
+            ->will($this->returnValue(null))
+        ;
+        try {
+            $oPlugin->_checkOrder($oShopgateOrderMock);
+            $this->fail('Exception expected, then order exists');
+        }
+        catch(ShopgateFrameworkException $oEx) {
+            $this->assertContains($sStoredOrderId, $oEx->getMessage());
+        }
+
+        // no such order test
+        $oPlugin->_checkOrder($oShopgateOrderMock);
+
     }
 }

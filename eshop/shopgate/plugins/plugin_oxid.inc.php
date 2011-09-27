@@ -992,6 +992,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     public function saveOrder(ShopgateOrder $order)
     {
+        $this->_checkOrder($order);
+
         $oNewOrder = oxNew('oxorder');
 
         $oNewOrder = $this->_executeLoaders($this->_getOrderImportLoaders(), $oNewOrder, $order);
@@ -1286,5 +1288,21 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $this->_sCurrency = $oCur->name;
         return $this->_sCurrency;
 
+    }
+
+    /**
+     * if given order exists in oxid, throws exception.
+     * @throws ShopgateFrameworkException
+     * @param ShopgateOrder $oShopgateOrder
+     * @return void
+     */
+    protected function _checkOrder( ShopgateOrder $oShopgateOrder )
+    {
+        $sSavedOrder = $this->_dbGetOne( "SELECT OXORDERNR FROM oxorder WHERE marm_shopgate_order_number = ?",
+            array($oShopgateOrder->getOrderNumber())
+        );
+        if ($sSavedOrder) {
+            throw new ShopgateFrameworkException('Order already stored in oxid. Order number: '.$sSavedOrder);
+        }
     }
 }
