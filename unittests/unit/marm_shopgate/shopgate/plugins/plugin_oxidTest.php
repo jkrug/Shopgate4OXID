@@ -801,6 +801,19 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('2 - 5 '.$sTransResult2, $aItem['available_text']);
     }
 
+    public function test__loadArticleExport_available_text_before_433() {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestArticle = oxNew('oxArticle');
+        $oTestArticle->oxarticles__oxstocktext = new oxField('1-2 days', oxField::T_RAW);
+
+        unset($oTestArticle->oxarticles__oxmindeltime);
+        unset($oTestArticle->oxarticles__oxmaxdeltime);
+        unset($oTestArticle->oxarticles__oxdeltimeunit);
+        $aItem = $oPlugin->_loadArticleExport_available_text(array(), $oTestArticle);
+        $this->assertEquals($oTestArticle->oxarticles__oxstocktext->value, $aItem['available_text']);
+
+    }
+
     public function test__getAdditionalItemFieldLoaders()
     {
         $oPlugin = $this->getProxyClass('ShopgatePlugin');

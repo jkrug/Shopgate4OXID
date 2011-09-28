@@ -514,9 +514,18 @@ class ShopgatePlugin extends ShopgatePluginCore {
      */
     protected function _loadArticleExport_available_text(array $aItem, oxArticle $oArticle)
     {
-        $sMinTime = $oArticle->oxarticles__oxmindeltime->value;
-        $sMaxTime = $oArticle->oxarticles__oxmaxdeltime->value;
-        $sTranslateIdent = $oArticle->oxarticles__oxdeltimeunit->value;
+        $sMinTime = 0;
+        $sMaxTime = 0;
+        $sTranslateIdent = '';
+        if (isset($oArticle->oxarticles__oxmindeltime)) {
+            $sMinTime = $oArticle->oxarticles__oxmindeltime->value;
+        }
+        if (isset($oArticle->oxarticles__oxmaxdeltime)) {
+            $sMaxTime = $oArticle->oxarticles__oxmaxdeltime->value;
+        }
+        if (isset($oArticle->oxarticles__oxdeltimeunit)) {
+            $sTranslateIdent = $oArticle->oxarticles__oxdeltimeunit->value;
+        }
         $sText = '';
         if ($sMinTime && $sMinTime != $sMaxTime) {
             $sText .= $sMinTime .' - ';
@@ -527,13 +536,18 @@ class ShopgatePlugin extends ShopgatePluginCore {
         if ($sMaxTime > 1 || $sMinTime > 1) {
             $sTranslateIdent .='S';
         }
-        $sText .= ' ';
-        $sText .= $this->_getTranslation( $sTranslateIdent,
-            array(
-                 'PAGE_DETAILS_DELIVERYTIME_'.$sTranslateIdent,
-                 'DETAILS_'.$sTranslateIdent
-            )
-        );
+        if (!$sText) {
+            $sText = $oArticle->oxarticles__oxstocktext->value;
+        }
+        else {
+            $sText .= ' ';
+            $sText .= $this->_getTranslation( $sTranslateIdent,
+                                              array(
+                                                   'PAGE_DETAILS_DELIVERYTIME_'.$sTranslateIdent,
+                                                   'DETAILS_'.$sTranslateIdent
+                                              )
+            );
+        }
 
         $aItem['available_text'] = $sText;
         return $aItem;
