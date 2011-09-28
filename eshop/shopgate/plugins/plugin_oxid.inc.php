@@ -775,8 +775,11 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * @param oxArticle $oArticle from here info will be taken
      * @return array changed $aItem
      */
-    protected function _loadSelectionListForArticle(array $aItem, oxArticle $oArticle)
+    protected function _loadSelectionListForArticle(array $aItem, $oArticle)
     {
+        if (!method_exists($oArticle, 'getSelections')) {
+            return $this->_loadSelectionListForArticle_for_older_then_450($aItem, $oArticle);
+        }
         $oSelectionList = $oArticle->getSelections();
         if (!$oSelectionList) {
             $aItem['has_options'] = 0;
@@ -799,6 +802,37 @@ class ShopgatePlugin extends ShopgatePluginCore {
             }
         }
         
+        return $aItem;
+    }
+
+    /**
+     * loads article selection list.
+     * Used only for older oxid version (before 4.5.0)
+     * @param array $aItem where to fill information
+     * @param oxArticle $oArticle from here info will be taken
+     * @return array changed $aItem
+     * @deprecated
+     */
+    protected function _loadSelectionListForArticle_for_older_then_450(array $aItem, $oArticle)
+    {
+        $aSelectionLists = $oArticle->getSelectLists();
+        if (!$aSelectionLists) {
+            $aItem['has_options'] = 0;
+            return $aItem;
+        }
+        $aItem['has_options']   = 1;
+        $iCount = 0;
+        foreach ($aSelectionLists as $aSelectionList) {
+            $iCount = $iCount + 1;
+            $aItem['option_'.$iCount] = $aSelectionList['name'];
+            $aSelectionValues = array();
+            foreach ($aSelectionList as $oListItem) {
+                if (is_object($oListItem) && isset($oListItem->name)) {
+                   $aSelectionValues[] = $oListItem->name;
+                }
+            }
+            $aItem['option_'.$iCount.'_values'] = implode(self::MULTI_SEPERATOR, $aSelectionValues);
+        }
         return $aItem;
     }
 

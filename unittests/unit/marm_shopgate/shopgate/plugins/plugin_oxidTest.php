@@ -1189,6 +1189,75 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('S||M||L', $aItem['option_2_values']);
     }
 
+    public function test__loadSelectionListForArticle_if_older_version()
+    {
+        $sExpectedResult = 'came from comp function';
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_loadSelectionListForArticle_for_older_then_450'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_loadSelectionListForArticle_for_older_then_450')
+            ->will($this->returnValue($sExpectedResult))
+        ;
+        $this->assertEquals($sExpectedResult, $oPlugin->_loadSelectionListForArticle(array(), new stdClass()));
+    }
+
+    public function test__loadSelectionListForArticle_for_older_then_450()
+    {
+        $aSelectionLists = array();
+        $aSelectionList = array();
+        $aSelectionList['name'] = 'sel1';
+        $oSelVal = new stdClass();
+        $oSelVal->name = 'val1';
+        $aSelectionList[] = $oSelVal;
+        $oSelVal = new stdClass();
+        $oSelVal->name = 'val2';
+        $aSelectionList[] = $oSelVal;
+        $aSelectionLists[] = $aSelectionList;
+        $aSelectionList = array();
+        $aSelectionList['name'] = 'sel3';
+        $oSelVal = new stdClass();
+        $oSelVal->name = 'val4';
+        $aSelectionList[] = $oSelVal;
+        $aSelectionLists[] = $aSelectionList;
+
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+
+        $oArticleMock = $this->getMock(
+            'stdClass',
+            array(
+                'getSelectLists'
+            )
+        );
+        $oArticleMock
+            ->expects($this->at(0))
+            ->method('getSelectLists')
+            ->will($this->returnValue(array()))
+        ;
+        $oArticleMock
+            ->expects($this->at(1))
+            ->method('getSelectLists')
+            ->will($this->returnValue($aSelectionLists))
+        ;
+
+        $aItem = $oPlugin->_loadSelectionListForArticle_for_older_then_450(array(), $oArticleMock);
+        $this->assertEquals('0', $aItem['has_options']);
+
+        $aItem = $oPlugin->_loadSelectionListForArticle_for_older_then_450(array(), $oArticleMock);
+        $this->assertEquals('1', $aItem['has_options']);
+        $this->assertEquals('sel1', $aItem['option_1']);
+        $this->assertEquals('val1||val2', $aItem['option_1_values']);
+        $this->assertEquals('sel3', $aItem['option_2']);
+        $this->assertEquals('val4', $aItem['option_2_values']);
+
+
+
+    }
+
     public function test__loadVariantsInfoForArticle()
     {
         $aOutput = array('ok');
