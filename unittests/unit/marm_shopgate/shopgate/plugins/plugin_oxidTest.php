@@ -42,7 +42,8 @@ class ShopgateOrderItemOption{}
 class ShopgateOrderApi{}
 class ShopgateFramework {}
 class ShopgateConfig {
-    static public function setConfig(){}
+    public static $aLastSetConfig = null;
+    static public function setConfig(){ self::$aLastSetConfig = func_get_args(); }
     static public function getConfig(){
         return array(
 		'api_url' => 'https://api.shopgate.com/shopgateway/api/',

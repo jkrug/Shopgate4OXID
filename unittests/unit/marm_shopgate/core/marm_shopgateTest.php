@@ -80,7 +80,7 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
             array(
                 '_getFilesToInclude',
                 '_getLibraryDir',
-                '_getConfigForFramework'
+                'initConfig'
             )
         );
         $oMarmShopgate
@@ -95,7 +95,7 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         ;
         $oMarmShopgate
             ->expects($this->exactly(2))
-            ->method('_getConfigForFramework')
+            ->method('initConfig')
         ;
         $GLOBALS['marm_shopgate_include_counter'] = 0;
 
@@ -108,6 +108,39 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $oMarmShopgate->init();
         $this->assertEquals(9, $GLOBALS['marm_shopgate_include_counter']);
         
+    }
+
+    public function test_initConfig()
+    {
+        $aMockConfig = array('plugin' => 'oxid');
+        $oMarmShopgate = $this->getMock(
+            $this->getProxyClassName('marm_shopgate'),
+            array(
+                '_getConfigForFramework'
+            )
+        );
+
+        $oMarmShopgate
+            ->expects($this->at(0))
+            ->method('_getConfigForFramework')
+            ->will($this->returnValue($aMockConfig))
+        ;
+
+        $aMockConfig = array(
+            'plugin' => 'oxid',
+            'apikey' => '09602cddb5af0aba745293d08ae6bcf6',
+            'customer_number' => '12345',
+            'shop_number' => '12345'
+        );
+        $oMarmShopgate
+            ->expects($this->at(1))
+            ->method('_getConfigForFramework')
+            ->will($this->returnValue($aMockConfig))
+        ;
+        $oMarmShopgate->initConfig();
+        $this->assertNull(ShopgateConfig::$aLastSetConfig);
+        $oMarmShopgate->initConfig();
+        $this->assertEquals($aMockConfig, ShopgateConfig::$aLastSetConfig[0]);
     }
 
     public function test_getFramework()

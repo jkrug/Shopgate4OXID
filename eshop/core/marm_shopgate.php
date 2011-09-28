@@ -141,9 +141,21 @@ class marm_shopgate
                 require_once $sFile;
             }
         }
-        ShopgateConfig::setConfig($this->_getConfigForFramework());
+        $this->initConfig();
     }
 
+    /**
+     * sends config to Shopgate instance only then required params are set:
+     * apikey, customer_number and shop_number
+     * @return void
+     */
+    public function initConfig()
+    {
+        $aConfig = $this->_getConfigForFramework();
+        if (isset($aConfig['apikey']) && isset($aConfig['customer_number']) && isset($aConfig['shop_number']) ) {
+            ShopgateConfig::setConfig($aConfig);
+        }
+    }
 
     /**
      * returns ShopgateFramework object,
