@@ -1,4 +1,33 @@
 <?php
+/**
+ * Shopgate Connector
+ *
+ * Copyright (c) 2011 Joscha Krug | marmalade.de
+ * E-mail: mail@marmalade.de
+ * http://www.marmalade.de
+ *
+ * Developed for
+ * Shopgate GmbH
+ * www.shopgate.com
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 require_once 'unit/OxidTestCase.php';
 require_once 'unit/test_config.inc.php';
@@ -73,8 +102,70 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $sIncludeDir = sys_get_temp_dir().DIRECTORY_SEPARATOR;
         $sFilePath1 = $sIncludeDir.$aTestFilesToInclude[0];
         $sFilePath2 = $sIncludeDir.$aTestFilesToInclude[1];
-        file_put_contents($sFilePath1, '<?php $GLOBALS[\'marm_shopgate_include_counter\'] += 1;');
-        file_put_contents($sFilePath2, '<?php ;$GLOBALS[\'marm_shopgate_include_counter\'] += 2;');
+        file_put_contents($sFilePath1, '<?php
+/**
+ * Shopgate Connector
+ *
+ * Copyright (c) 2011 Joscha Krug | marmalade.de
+ * E-mail: mail@marmalade.de
+ * http://www.marmalade.de
+ *
+ * Developed for
+ * Shopgate GmbH
+ * www.shopgate.com
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+ $GLOBALS[\'marm_shopgate_include_counter\'] += 1;');
+        file_put_contents($sFilePath2, '<?php
+/**
+ * Shopgate Connector
+ *
+ * Copyright (c) 2011 Joscha Krug | marmalade.de
+ * E-mail: mail@marmalade.de
+ * http://www.marmalade.de
+ *
+ * Developed for
+ * Shopgate GmbH
+ * www.shopgate.com
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+ ;$GLOBALS[\'marm_shopgate_include_counter\'] += 2;');
         $oMarmShopgate = $this->getMock(
             'marm_shopgate',
             array(
