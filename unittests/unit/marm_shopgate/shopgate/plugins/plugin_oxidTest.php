@@ -1279,6 +1279,13 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('', $oPlugin->_getLanguageTagForTable('oxv_oxarticles_en'));
     }
 
+    public function test_createCategoriesCsv()
+    {
+        //empty function currently
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $this->assertNull($oPlugin->createCategoriesCsv());
+    }
+
     public function test_createReviewsCsv()
     {
         //empty function currently

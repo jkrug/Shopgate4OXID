@@ -899,6 +899,15 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * NOT IMPLEMENTED YET
      * @return void
      */
+    protected function createCategoriesCsv()
+    {
+
+    }
+
+    /**
+     * NOT IMPLEMENTED YET
+     * @return void
+     */
     protected function createReviewsCsv()
     {
 
