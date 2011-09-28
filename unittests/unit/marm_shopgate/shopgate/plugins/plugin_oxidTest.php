@@ -403,6 +403,81 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals($sLongDesc, $aItem['description']);
     }
 
+    public function test__loadArticleExport_description_for_older_then_450()
+    {
+        $sLongDesc = "some text here";
+        $oTestArticle = $this->getMock( 'stdClass' );
+        $oPlugin = $this->getMock(
+            $this->getProxyClassName('ShopgatePlugin'),
+            array(
+                '_getArticleLongDesc'
+            )
+        );
+        $oPlugin
+            ->expects($this->once())
+            ->method('_getArticleLongDesc')
+            ->with($oTestArticle)
+            ->will($this->returnValue($sLongDesc))
+        ;
+        $aItem = $oPlugin->_loadArticleExport_description(array(), $oTestArticle);
+        $this->assertEquals($sLongDesc, $aItem['description']);
+    }
+
+    public function test__getArticleLongDesc()
+    {
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oLongDesc = new stdClass();
+        $oLongDesc->rawValue = 'raw_value';
+        $oLongDesc->Value = 'simple_value';
+        $oTestArticle = $this->getMock(
+            'oxArticle',
+            array(
+                'getArticleLongDesc',
+                'getId',
+                'getLanguage'
+            )
+        );
+        $oTestArticle
+            ->expects($this->exactly(2))
+            ->method('getArticleLongDesc')
+            ->will($this->returnValue($oLongDesc))
+        ;
+        $oTestArticle
+            ->expects($this->exactly(2))
+            ->method('getId')
+            ->will($this->returnValue('id1'))
+        ;
+        $oTestArticle
+            ->expects($this->exactly(2))
+            ->method('getLanguage')
+            ->will($this->returnValue('lang2'))
+        ;
+        $oOxUtilsViewMock = $this->getMock(
+            'oxUtilsView',
+            array(
+                'parseThroughSmarty'
+            )
+        );
+        $oOxUtilsViewMock
+            ->expects($this->at(0))
+            ->method('parseThroughSmarty')
+            ->with($oLongDesc->rawValue, 'id1lang2')
+            ->will($this->returnValue('OK1'))
+        ;
+        $oOxUtilsViewMock
+            ->expects($this->at(1))
+            ->method('parseThroughSmarty')
+            ->with($oLongDesc->value, 'id1lang2')
+            ->will($this->returnValue('OK2'))
+        ;
+        $this->_blResetInstances = true;
+        modInstances::addMod('oxUtilsView', $oOxUtilsViewMock);
+        
+        $this->assertEquals('OK1', $oPlugin->_getArticleLongDesc($oTestArticle));
+        $oLongDesc->rawValue = null;
+        $this->assertEquals('OK2', $oPlugin->_getArticleLongDesc($oTestArticle));
+    }
+
     public function test__loadArticleExport_url_deeplink()
     {
         $sLink = "http://testing.ln/";

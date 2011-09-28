@@ -289,10 +289,35 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * @param oxArticle $oArticle from here info will be taken
      * @return array changed $aItem
      */
-    protected function _loadArticleExport_description(array $aItem, oxArticle $oArticle)
+    protected function _loadArticleExport_description(array $aItem, $oArticle)
     {
-        $aItem['description']   = $oArticle->getLongDesc();
+        if (method_exists($oArticle, 'getLongDesc')) {
+            $aItem['description'] = $oArticle->getLongDesc();
+        }
+        else {
+            $aItem['description'] = $this->_getArticleLongDesc($oArticle);
+        }
         return $aItem;
+    }
+
+    /**
+     * returns parsed through smarty article long description.
+     * Used only for older then 4.5.0 oxid versions.
+     * same as oxArticle::getLongDesc()
+     * @param oxArticle $oArticle
+     * @return string
+     */
+    protected function _getArticleLongDesc($oArticle)
+    {
+        $oLongDesc = $oArticle->getArticleLongDesc();
+        if (null !== $oLongDesc->rawValue) {
+            $sLongDesc = $oLongDesc->rawValue;
+        }
+        else {
+            $sLongDesc = $oLongDesc->value;
+        }
+        $sLongDesc = oxUtilsView::getInstance()->parseThroughSmarty( $sLongDesc, $oArticle->getId().$oArticle->getLanguage() );
+        return $sLongDesc;
     }
 
     /**
@@ -1265,7 +1290,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
                 $sSelList .= "{$oOption->getName()} : {$oOption->getValue()}";
             }
         }
-        $oOrderArticle->oxorderarticles__oxselvariant = new oxField( trim( $sSelList.' '.$oProduct->oxarticles__oxvarselect->getRawValue() ), oxField::T_RAW );
+        $oOrderArticle->oxorderarticles__oxselvariant = new oxField( trim( $sSelList.' '.$oProduct->oxarticles__oxvarselect->value ), oxField::T_RAW );
         return $oOrderArticle;
 
     }
