@@ -181,6 +181,40 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertTrue(strpos($sResult, $sSelectWhere) !== false);
     }
 
+    public function test_getDefaultRowForCreateItemsCsv()
+    {
+        $aResult1 = array('new version');
+        $aResult2 = array('old version');
+        $oPlugin = $this->getProxyClass('ShopgatePlugin');
+        $oTestPlugin1 = $this->getMock(
+            'stdClass',
+            array(
+                'buildDefaultProductRow'
+            )
+        );
+        $oTestPlugin1
+            ->expects($this->once())
+            ->method('buildDefaultProductRow')
+            ->will($this->returnValue($aResult1))
+        ;
+        $oTestPlugin2 = $this->getMock(
+            'stdClass',
+            array(
+                'buildDefaultRow'
+            )
+        );
+        $oTestPlugin2
+            ->expects($this->once())
+            ->method('buildDefaultRow')
+            ->will($this->returnValue($aResult2))
+        ;
+
+        $this->assertEquals(array(), $oPlugin->getDefaultRowForCreateItemsCsv(new stdClass()));
+        $this->assertEquals($aResult1, $oPlugin->getDefaultRowForCreateItemsCsv($oTestPlugin1));
+        $this->assertEquals($aResult2, $oPlugin->getDefaultRowForCreateItemsCsv($oTestPlugin2));
+
+    }
+
     public function test_createItemsCsv()
     {
         $sTestSql = 'SELECT OXID FROM oxarticles LIMIT 2';
@@ -191,7 +225,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
             array(
                 '_getArticleBase',
                 '_getArticleSQL',
-                'buildDefaultRow',
+                'getDefaultRowForCreateItemsCsv',
                 '_getMainItemLoaders',
                 '_executeLoaders',
                 'addItem'
@@ -210,7 +244,7 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         ;
         $oPlugin
             ->expects($this->once())
-            ->method('buildDefaultRow')
+            ->method('getDefaultRowForCreateItemsCsv')
             ->will($this->returnValue(array()))
         ;
         $oPlugin

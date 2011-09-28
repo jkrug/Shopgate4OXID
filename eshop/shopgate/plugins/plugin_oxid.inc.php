@@ -140,6 +140,25 @@ class ShopgatePlugin extends ShopgatePluginCore {
     }
 
     /**
+     * checks compatibility with ShopgateFramework default row method
+     * remove then requirements will change to new version
+     * @param ShopgatePlugin $oShopgatePlugin
+     * @return array
+     * @deprecated
+     */
+    protected function getDefaultRowForCreateItemsCsv($oShopgatePlugin)
+    {
+        $aDefaultRow = array();
+        if (method_exists($oShopgatePlugin, 'buildDefaultProductRow')) {
+            $aDefaultRow = $oShopgatePlugin->buildDefaultProductRow();
+        }
+        elseif(method_exists($oShopgatePlugin, 'buildDefaultRow')) {
+            $aDefaultRow = $oShopgatePlugin->buildDefaultRow();
+        }
+        return $aDefaultRow;
+    }
+
+    /**
      * loads default row ($this->buildDefaultRow()) and
      * for each article will overwrite data, and pass to $this->addItem()
      * @return void
@@ -150,7 +169,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         $sSelect = $this->_getArticleSQL($oArticleBase);
 
-        $aDefaultRow = $this->buildDefaultRow();
+        $aDefaultRow = $this->getDefaultRowForCreateItemsCsv($this);
         $aMainLoaders = $this->_getMainItemLoaders();
 
         $rs = oxDb::getDb(true)->Execute( $sSelect);
@@ -306,6 +325,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
      * same as oxArticle::getLongDesc()
      * @param oxArticle $oArticle
      * @return string
+     * @deprecated
      */
     protected function _getArticleLongDesc($oArticle)
     {
