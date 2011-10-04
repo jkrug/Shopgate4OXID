@@ -1,0 +1,58 @@
+==Title==
+Shopgate integration in oxid
+
+==Author==
+Joscha Krug
+Mazvydas Skuodas
+marmalade.de
+
+==Prefix==
+marm
+
+==Version==
+1.0.0
+
+==Link==
+http://www.marmalade.de
+
+==Mail==
+mail@marmalade.de
+
+==Description==
+Shopgate integration in oxid.
+Article export to Shopgate,
+Order import from Shopgate,
+ShopgateConnect,
+"Shipping completed" status sending to Shopgate,
+Redirect mobile device users to Shopgate
+
+==Extend==
+*oxorder
+--save
+*oxoutput
+--process
+
+==Installation==
+Install shopgate framework under /yourshopdir/shopgate/ dir.
+
+copy files/folders from "copy_this" to /yourshopdir/
+
+if your oxid version older then 4.3.2, copy file from /yourshop/modules/marm/shopgate/menu.xml
+to /yourshop/modules/marm_shopgate/menu.xml due oxid supported only one level navigation XML scaning
+
+Execute the install.sql script.
+If you use OXID eShop > 4.4.8, go to admin -> Service -> Tools an press "Update Views"
+
+Add the module entries in admin.
+clean oxid tmp folder to update DB field cache and language constants in admin.
+setup your shogate config in oxid admin area in "Master Settings" > "Core Settings" > "Shopgate"
+
+==Modules==
+oxorder => marm/shopgate/marm_shopgate_oxorder
+oxoutput => marm/shopgate/marm_shopgate_oxoutput
+
+==Libraries==
+shopgate framework. Please install it in /yourshopdir/shopgate/
+
+==Resources==
+http://code.google.com/p/shopgate-framework/
