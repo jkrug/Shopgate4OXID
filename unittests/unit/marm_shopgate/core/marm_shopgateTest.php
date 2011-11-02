@@ -35,10 +35,15 @@ require_once 'unit/test_config.inc.php';
 class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
 {
     protected $_oOldMarmShopgateInstance = null;
+    protected $_blResetOxConfig  = false;
     protected $_blResetModules   = false;
 
     public function tearDown()
     {
+        if ($this->_blResetOxConfig) {
+            $this->_blResetOxConfig = false;
+            modConfig::$unitMOD = null;
+        }
         if ($this->_oOldMarmShopgateInstance !== null) {
             marm_shopgate::replaceInstance($this->_oOldMarmShopgateInstance);
             $this->_oOldMarmShopgateInstance = null;
@@ -406,6 +411,118 @@ class unit_marm_shopgate_core_marm_shopgateTest extends OxidTestCase
         $aSecondResult = $oMarmShopgate->getMobileSnippet();
         $this->assertContains($aOxidConfig['shopgate_shop_number'], $aSecondResult);
         $this->assertContains('shopgate.com', $aSecondResult);
+
+    }
+
+    public function test_getMobileSnippet_with_details()
+    {
+        $aOxidConfig = array(
+            'enabled_mobile' => true,
+            'shopgate_shop_number' => '123321'
+        );
+        $oMarmShopgate = $this->getMock(
+            'marm_shopgate',
+            array(
+                'getOxidConfigKey',
+                '_getDetailsMobileSnippet'
+            )
+        );
+        $oMarmShopgate
+            ->expects($this->at(0))
+            ->method('getOxidConfigKey')
+            ->with('enable_mobile_website')
+            ->will($this->returnValue('enabled_mobile'))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(1))
+            ->method('getOxidConfigKey')
+            ->with('shop_number')
+            ->will($this->returnValue('shopgate_shop_number'))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(2))
+            ->method('_getDetailsMobileSnippet')
+            ->will($this->returnValue(''))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(3))
+            ->method('getOxidConfigKey')
+            ->with('enable_mobile_website')
+            ->will($this->returnValue('enabled_mobile'))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(4))
+            ->method('getOxidConfigKey')
+            ->with('shop_number')
+            ->will($this->returnValue('shopgate_shop_number'))
+        ;
+        $oMarmShopgate
+            ->expects($this->at(5))
+            ->method('_getDetailsMobileSnippet')
+            ->will($this->returnValue('shopgate_item_number_here'));
+        foreach ($aOxidConfig as $sKey => $sValue) {
+            modConfig::getInstance()->setConfigParam($sKey, $sValue);
+        }
+
+        $sFirstResult =  $oMarmShopgate->getMobileSnippet();
+        $this->assertContains($aOxidConfig['shopgate_shop_number'], $sFirstResult);
+        $this->assertNotContains('shopgate_item_number_here', $sFirstResult );
+        $aSecondResult = $oMarmShopgate->getMobileSnippet();
+        $this->assertContains($aOxidConfig['shopgate_shop_number'], $aSecondResult);
+        $this->assertContains('shopgate_item_number_here', $aSecondResult);
+
+    }
+
+    public function test__getDetailsMobileSnippet()
+    {
+        $oFakeArticle = new stdClass();
+        $oFakeArticle->oxarticles__oxartnum = new stdClass();
+        $oFakeArticle->oxarticles__oxartnum->value = 'artnumhere';
+
+        $oViewMock = $this->getMock(
+            'oxView',
+            array(
+                'getClassName',
+                'getProduct'
+            )
+        );
+        $oViewMock
+            ->expects($this->at(0))
+            ->method('getClassName')
+            ->will($this->returnValue('list'))
+        ;
+        $oViewMock
+            ->expects($this->at(1))
+            ->method('getClassName')
+            ->will($this->returnValue('details'))
+        ;
+        $oViewMock
+            ->expects($this->atLeastOnce())
+            ->method('getProduct')
+            ->will($this->returnValue($oFakeArticle))
+        ;
+        $oConfigMock = $this->getMock(
+            'oxConfig',
+            array(
+                'getActiveView'
+            )
+        );
+        $oConfigMock
+            ->expects($this->exactly(2))
+            ->method('getActiveView')
+            ->will($this->returnValue($oViewMock))
+        ;
+        $this->_blResetOxConfig = true;
+        modConfig::$unitMOD = $oConfigMock;
+
+        $oMarmShopgate = $this->getProxyClass('marm_shopgate');
+
+        $this->assertEquals('', $oMarmShopgate->_getDetailsMobileSnippet());
+        $sResult = $oMarmShopgate->_getDetailsMobileSnippet();
+        $this->assertContains($oFakeArticle->oxarticles__oxartnum->value, $sResult);
+        $this->assertContains('item', $sResult);
+        $this->assertContains('redirect', $sResult);
+        $this->assertContains('item_number', $sResult);
 
     }
 

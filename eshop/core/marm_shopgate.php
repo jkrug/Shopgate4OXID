@@ -292,6 +292,7 @@ class marm_shopgate
             $sSnippet  = '<script type="text/javascript">'."\n";
             $sSnippet .= 'var _shopgate = {}; '."\n";
             $sSnippet .= '_shopgate.shop_number = "'.$iShopNumber.'"; '."\n";
+            $sSnippet .= $this->_getDetailsMobileSnippet();
             $sSnippet .= '_shopgate.host = (("https:" == document.location.protocol) ? "';
             $sSnippet .= 'https://static-ssl.shopgate.com" : "http://static.shopgate.com"); '."\n";
             $sSnippet .= 'document.write(unescape("%3Cscript src=\'" + _shopgate.host + ';
@@ -300,6 +301,22 @@ class marm_shopgate
             $sSnippet .= '</script>';
         }
         return $sSnippet;
+    }
+
+    /**
+     * if current page is details, returns redirect values for this article
+     * @return string
+     */
+    protected function _getDetailsMobileSnippet()
+    {
+        $sReturn = '';
+        $oActiveView = oxConfig::getInstance()->getActiveView();
+        if ($oActiveView->getClassName() == 'details') {
+            $sReturn .= '_shopgate.redirect = "item";'."\n";
+            $oArticle = $oActiveView->getProduct();
+            $sReturn .= '_shopgate.item_number = "'.$oArticle->oxarticles__oxartnum->value.'";'."\n";
+        }
+        return $sReturn;
     }
 
     /**
