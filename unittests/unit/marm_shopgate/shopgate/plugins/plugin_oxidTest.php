@@ -718,7 +718,13 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals(array(array('column_name'=>'value')), $oPlugin->_dbGetAll($sSQL, array('value')));
 
         $sSQL = 'error';
-        $this->assertEquals(array(), $oPlugin->_dbGetAll($sSQL));
+        // if debug level is set, exception is throwned, otherwise empty array
+        try {
+            $this->assertEquals(array(), $oPlugin->_dbGetAll($sSQL));
+        }
+        catch(ADODB_Exception $oEx) {
+            $this->assertEquals($sSQL, $oEx->sql);
+        }
     }
 
     public function test__dbGetOne()
@@ -728,7 +734,13 @@ class unit_marm_shopgate_shopgate_plugins_plugin_oxidTest extends OxidTestCase
         $this->assertEquals('value', $oPlugin->_dbGetOne($sSQL, array('value')));
 
         $sSQL = 'error';
-        $this->assertNull($oPlugin->_dbGetOne($sSQL));
+        // if debug level is set, exception is throwned, otherwise null
+        try {
+            $this->assertNull($oPlugin->_dbGetOne($sSQL));
+        }
+        catch(ADODB_Exception $oEx) {
+            $this->assertEquals($sSQL, $oEx->sql);
+        }
     }
 
     public function test__loadArticleExport_manufacturer()
