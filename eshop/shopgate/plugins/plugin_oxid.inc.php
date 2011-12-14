@@ -155,15 +155,20 @@ class ShopgatePlugin extends ShopgatePluginCore {
     /**
      * Formats SQL from oxarticle object to load the list
      * @param oxArticle $oArticleBase
+     * @param int $limit
+     * @param int $offset
      * @return string
      */
-    protected function _getArticleSQL($oArticleBase)
+    protected function _getArticleSQL($oArticleBase, $limit = false, $offset = false)
     {
         $sArticleTable = $oArticleBase->getViewName();
         $sFields = $oArticleBase->getSelectFields();
         $sSqlActiveSnippet = $oArticleBase->getSqlActiveSnippet();
 
-        $sSelect = " SELECT {$sFields} FROM {$sArticleTable} WHERE {$sSqlActiveSnippet} ";
+        $sSelect = " SELECT {$sFields} FROM {$sArticleTable} WHERE {$sSqlActiveSnippet} ORDER BY OXID ASC";
+        if($limit !== false && is_int($limit) && $offset !== false && is_int($offset)){
+            $sSelect .= " LIMIT {$limit} OFFSET {$offset}";
+        }
         return $sSelect;
     }
 
@@ -195,14 +200,18 @@ class ShopgatePlugin extends ShopgatePluginCore {
     {
         $oArticleBase = $this->_getArticleBase();
 
-        $sSelect = $this->_getArticleSQL($oArticleBase);
-
+        $limit = empty($_REQUEST['limit']) ? false : (int)$_REQUEST['limit'];
+        $offset = empty($_REQUEST['offset']) ? false : (int)$_REQUEST['offset'];
+        
+        $sSelect = $this->_getArticleSQL($oArticleBase, $limit, $offset);
         $aDefaultRow = $this->getDefaultRowForCreateItemsCsv($this);
         $aMainLoaders = $this->_getMainItemLoaders();
 
         $rs = oxDb::getDb(true)->Execute( $sSelect);
+        $emptyReturn = true;
         if ($rs != false && $rs->recordCount() > 0) {
             while (!$rs->EOF) {
+                $emptyReturn = false;
                 $oArticle = clone $oArticleBase;
                 $oArticle->assign($rs->fields);
 
@@ -214,6 +223,10 @@ class ShopgatePlugin extends ShopgatePluginCore {
                 $rs->moveNext();
                 $this->addItem($aItem);
             }
+        }
+        # if empty return, we have to change content-type
+        if($emptyReturn){
+            header("Content-Type: application/json");
         }
     }
 
