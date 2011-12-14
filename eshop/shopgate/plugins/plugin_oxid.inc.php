@@ -28,6 +28,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+if(!function_exists('getShopBasePath')){
+    $sOxidConfigDir = '../..';
+    function getShopBasePath()
+    {
+        return dirname(__FILE__).'/../../';
+    }
+    require_once(getShopBasePath() .'/core/oxfunctions.php');
+    require_once(getShopBasePath() ."/core/adodblite/adodb.inc.php");
+    
+}
+
 
 class ShopgatePlugin extends ShopgatePluginCore {
 
