@@ -40,7 +40,7 @@ class marm_shopgate_oxoutput extends marm_shopgate_oxoutput_parent
     {
         if(!isAdmin()) {
             $sMobileSnippet = marm_shopgate::getInstance()->getMobileSnippet();
-            $sOutput = str_ireplace("</body>", "{$sMobileSnippet}\n</body>", $sOutput);
+            $sOutput = str_ireplace("</head>", "{$sMobileSnippet}\n</head>", $sOutput);
         }
         return $sOutput;
     }
