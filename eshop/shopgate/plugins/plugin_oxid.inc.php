@@ -177,8 +177,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $sSqlActiveSnippet = $oArticleBase->getSqlActiveSnippet();
 
         $sSelect = " SELECT {$sFields} FROM {$sArticleTable} WHERE {$sSqlActiveSnippet} ORDER BY OXID ASC";
-        if($limit !== false && is_int($limit) && $offset !== false && is_int($offset)){
-            $sSelect .= " LIMIT {$limit} OFFSET {$offset}";
+        if($limit !== false && is_int($limit)){
+            $sSelect .= " LIMIT {$limit}";
+            
+            if($offset !== false && is_int($offset)){
+                $sSelect .= " OFFSET {$offset}";
+            }
         }
         return $sSelect;
     }
