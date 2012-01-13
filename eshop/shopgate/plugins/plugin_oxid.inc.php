@@ -487,7 +487,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $sCategoriesTable = $oCategory->getViewName();
         $sLangTag = $this->_getLanguageTagForTable($sCategoriesTable);
         $sTitleField = 'OXTITLE'.$sLangTag;
-        $sSQL = " SELECT  OXID, {$sTitleField} as OXTITLE, OXPARENTID FROM {$sCategoriesTable} ORDER BY OXLEFT ";
+        $sSQL = " SELECT  OXID, {$sTitleField} as OXTITLE, OXPARENTID FROM {$sCategoriesTable} WHERE OXACTIVE = 1 AND OXHIDDEN = 0 ORDER BY OXLEFT ";
         return $this->_dbGetAll($sSQL);
     }
 
