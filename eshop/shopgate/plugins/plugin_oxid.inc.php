@@ -688,7 +688,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _loadArticleExport_basic_price(array $aItem, oxArticle $oArticle)
     {
         if ((double) $oArticle->oxarticles__oxunitquantity->value && $oArticle->oxarticles__oxunitname->value) {
-            $aItem['basic_price'] = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice() / (double) $oArticle->oxarticles__oxunitquantity->value);
+            $aItem['basic_price'] = $this->_formatPrice($oArticle->getPrice()->getBruttoPrice() / (double) $oArticle->oxarticles__oxunitquantity->value) . " " . $this->_getActiveCurrency() . " / " . $oArticle->oxarticles__oxunitname->value; 
         }
         else {
             $aItem['basic_price'] = '';
