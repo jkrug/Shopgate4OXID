@@ -1,5 +1,5 @@
 ==Title==
-Shopgate integration in oxid
+Shopgate integration in OXID
 
 ==Author==
 Joscha Krug
@@ -19,7 +19,7 @@ http://www.marmalade.de
 mail@marmalade.de
 
 ==Description==
-Shopgate integration in oxid.
+Shopgate integration in OXID eShop.
 Article export to Shopgate,
 Order import from Shopgate,
 ShopgateConnect,
@@ -49,6 +49,11 @@ If you use older OXID eShop version then 4.5.0 you should add module:
 Add the module entries in admin.
 clean oxid tmp folder to update DB field cache and language constants in admin.
 setup your shogate config in oxid admin area in "Master Settings" > "Core Settings" > "Shopgate"
+
+==Pregeneration of CSV-file==
+It is possible to pregenerate the CSV-file for the items.
+For that you could set an cronjob to
+shopdomain.com/shopgate/cronjobs/update_items_csv.php
 
 ==Modules==
 oxorder => marm/shopgate/marm_shopgate_oxorder
