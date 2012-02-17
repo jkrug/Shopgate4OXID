@@ -178,8 +178,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $sArticleTable = $oArticleBase->getViewName();
         $sFields = $oArticleBase->getSelectFields();
         $sSqlActiveSnippet = $oArticleBase->getSqlActiveSnippet();
+        
+        $sSqlActive = $sSqlActiveSnippet . " AND ( OXPARENTID = '' OR 
+        										   OXPARENTID IN (SELECT OXID FROM {$sArticleTable} WHERE {$sSqlActiveSnippet}) 
+                                                 )";
 
-        $sSelect = " SELECT {$sFields} FROM {$sArticleTable} WHERE {$sSqlActiveSnippet} ORDER BY OXID ASC";
+        $sSelect = " SELECT {$sFields} FROM {$sArticleTable} WHERE {$sSqlActive} ORDER BY OXID ASC";
         if($limit !== false && is_int($limit)){
             $sSelect .= " LIMIT {$limit}";
             
