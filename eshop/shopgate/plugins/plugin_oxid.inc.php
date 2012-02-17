@@ -1384,13 +1384,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
             $oOrderArticle->oxorderarticles__oxamount  = new oxField( $oShopgateOrderItem->getQuantity() );
 
             // prices
-            $oOrderArticle->oxorderarticles__oxnetprice  = new oxField( $oShopgateOrderItem->getUnitAmount()/100.0, oxField::T_RAW );
-            $oOrderArticle->oxorderarticles__oxvatprice  = new oxField( ($oShopgateOrderItem->getUnitAmountWithTax() - $oShopgateOrderItem->getUnitAmount())/100.0, oxField::T_RAW );
-            $oOrderArticle->oxorderarticles__oxbrutprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxnetprice  = new oxField( $oShopgateOrderItem->getUnitAmount()*$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxvatprice  = new oxField( ($oShopgateOrderItem->getUnitAmountWithTax() - $oShopgateOrderItem->getUnitAmount())*$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxbrutprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()*$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
             $oOrderArticle->oxorderarticles__oxvat       = new oxField( $oShopgateOrderItem->getTaxPercent(), oxField::T_RAW );
 
-            $oOrderArticle->oxorderarticles__oxnprice = new oxField( $oShopgateOrderItem->getUnitAmount()/$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
-            $oOrderArticle->oxorderarticles__oxbprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/$oShopgateOrderItem->getQuantity()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxnprice = new oxField( $oShopgateOrderItem->getUnitAmount()/100.0, oxField::T_RAW );
+            $oOrderArticle->oxorderarticles__oxbprice = new oxField( $oShopgateOrderItem->getUnitAmountWithTax()/100.0, oxField::T_RAW );
 
             // items shop id
             $oOrderArticle->oxorderarticles__oxordershopid = new oxField( $oProduct->getShopId(), oxField::T_RAW );
