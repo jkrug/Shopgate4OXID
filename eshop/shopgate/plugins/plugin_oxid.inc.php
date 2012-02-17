@@ -1121,7 +1121,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oUserData->setStreet($oUser->oxuser__oxstreet->value . ' ' . $oUser->oxuser__oxstreetnr->value);
         $oUserData->setCity($oUser->oxuser__oxcity->value);
         $oUserData->setZip($oUser->oxuser__oxzip->value);
-        $oUserData->setCountry($oUser->getUserCountry());
+        $oUserData->setCountry("DE");
         if ($oUser->oxuser__oxcompany->value) {
             $oUserData->setCompany($oUser->oxuser__oxcompany->value);
         }
