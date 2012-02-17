@@ -40,7 +40,7 @@ if(!function_exists('getShopBasePath')){
 }
 
 define('SHOPGATE_PLUGIN_VERSION','1.0.1');
-define('SHOPGATE_PLUGIN_REVISION','213efe2');
+define('SHOPGATE_PLUGIN_REVISION','f475222');
 
 
 class ShopgatePlugin extends ShopgatePluginCore {
@@ -1200,6 +1200,9 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         // shipping cost
         $oOxidOrder->oxorder__oxdelcost = new oxField($oShopgateOrder->getAmountShipping()/100, oxField::T_RAW);
+        
+        // set shopgate paymenttype
+        $oOxidOrder->oxorder__oxpaymenttype = new oxField('oxshopgate', oxField::T_RAW); 
         
         return $oOxidOrder;
     }
