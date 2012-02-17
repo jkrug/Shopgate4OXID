@@ -1187,7 +1187,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $oOxidOrder->oxorder__oxcurrate  = new oxField(1, oxField::T_RAW);
 
         // shipping cost
-        $oOxidOrder->oxorder__oxdelcost = new oxField($oShopgateOrder->getAmountShipping(), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxdelcost = new oxField($oShopgateOrder->getAmountShipping()/100, oxField::T_RAW);
         
         return $oOxidOrder;
     }
