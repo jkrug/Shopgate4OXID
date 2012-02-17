@@ -466,6 +466,11 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         foreach($this->_getCategoriesPathFromDB() as $aRes) {
 
+            // don't include if parrent is hidden and not root
+            if($aRes['OXPARENTID'] != 'oxrootid' && empty($this->_aCategoriesPath[$aRes['OXPARENTID']])) {
+                continue;
+            }
+            
             $sPath = '';
             if ($aRes['OXPARENTID'] != 'oxrootid') {
                 $sPath = $this->_aCategoriesPath[$aRes['OXPARENTID']] . self::PARENT_SEPERATOR;
