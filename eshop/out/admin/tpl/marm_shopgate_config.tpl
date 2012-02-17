@@ -49,7 +49,7 @@ function _groupExp(el) {
                   [{foreach from=$aConfigItem.options item='sOption'}]
                      <option value="[{$sOption}]"  [{if $aConfigItem.value == $sOption }]selected[{/if}]>[{ oxmultilang ident="MARM_SHOPGATE_CONFIG_"|cat:$aConfigItem.shopgate_name|cat:'_'|cat:$sOption|upper }]</option>
                   [{/foreach}]
-                </select>
+                </select>[{ oxinputhelp ident="MARM_SHOPGATE_CONFIG_SERVERUMG_HELP" }]
                 [{else}][{*  if $aConfigItem.type == 'input'  *}]
                 <input type="text" class="txt" name="confstrs[[{$aConfigItem.oxid_name}]]" value="[{$aConfigItem.value}]" [{ $readonly}]>
                 [{/if}]
