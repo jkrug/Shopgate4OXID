@@ -287,7 +287,7 @@ class marm_shopgate
     {
         $sSnippet = '';
         $oOxidConfig = oxConfig::getInstance();
-        if ( $oOxidConfig->getConfigParam($this->getOxidConfigKey('enable_mobile_website')) ) {
+        if ( $oOxidConfig->getConfigParam($this->getOxidConfigKey('enable_mobile_website')) && $oOxidConfig->getConfigParam($this->getOxidConfigKey('shop_is_active')) ) {
             $iShopNumber = $oOxidConfig->getConfigParam($this->getOxidConfigKey('shop_number'));
             $sSnippet  = '<script type="text/javascript">'."\n";
             $sSnippet .= 'var _shopgate = {}; '."\n";
