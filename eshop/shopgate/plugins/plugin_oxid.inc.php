@@ -605,18 +605,16 @@ class ShopgatePlugin extends ShopgatePluginCore {
             $sTranslateIdent .='S';
         }
 
-        if (!$oArticle->oxarticles__oxstocktext->value)
-        {
-            $sText .= ' ';
-            $sText .= $this->_getTranslation( $sTranslateIdent,
-                                              array(
-                                                   'PAGE_DETAILS_DELIVERYTIME_'.$sTranslateIdent,
-                                                   'DETAILS_'.$sTranslateIdent
-                                              )
-            );
-        } else {
-            $sText .= ' ' . $oArticle->oxarticles__oxstocktext->value;
-        }
+        $sText .= ' ';
+        $sText .= $this->_getTranslation( $sTranslateIdent,
+                                          array(
+                                               'PAGE_DETAILS_DELIVERYTIME_'.$sTranslateIdent,
+                                               'DETAILS_'.$sTranslateIdent
+                                          )
+        );
+        
+        $sText .= ' | ' . $oArticle->oxarticles__oxstocktext->value;
+        
 
         $aItem['available_text'] = $sText;
         return $aItem;
@@ -1258,7 +1256,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _loadOrderContacts(oxOrder $oOxidOrder, ShopgateOrder $oShopgateOrder)
     {
         $sOrderEmail = $oShopgateOrder->getCustomerMail();
-        $oOxidOrder->oxorder__oxuserid       = new oxField($this->_getUserOxidByEmail($sOrderEmail), oxField::T_RAW);
+        $oOxidOrder->oxorder__oxuserid       = new oxField($this->_getUserOxidByEmail($oShopgateOrder), oxField::T_RAW);
         $oOxidOrder->oxorder__oxbillemail       = new oxField($sOrderEmail, oxField::T_RAW);
 
         $oInvoiceAddress = $oShopgateOrder->getInvoiceAddress();
@@ -1325,35 +1323,60 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
     /**
      * returns user oxid if it exist by email
-     * @param $sUserEmail
+     * @param $sOrderEmail
      * @return null|string
      */
-    protected function _getUserOxidByEmail($sUserEmail)
+    protected function _getUserOxidByEmail($oShopgateOrder)
     {
+        $sUserEmail = $oShopgateOrder->getCustomerMail();
         $sUserOxid = $this->_dbGetOne( "SELECT OXID FROM oxuser WHERE OXUSERNAME = ?",
             array($sUserEmail)
         );
         if(!empty($sUserOxid)){
             return $sUserOxid;
         }
-        return $this->_createUserOxidByEmail($sUserEmail);
+        return $this->_createUserOxidByEmail($oShopgateOrder);
     }
     
     /**
      * create a new oxid user by email
-     * @param string $sUserEmail
+     * @param string $oShopgateOrder
      * @return null|string
      */
-    protected function _createUserOxidByEmail($sUserEmail)
+    protected function _createUserOxidByEmail($oShopgateOrder)
     {
         try {
-        
+            $sUserEmail = $oShopgateOrder->getCustomerMail();
+            $oShopgateOrderAddress = $oShopgateOrder->getInvoiceAddress();
             $oUser = oxNew( 'oxuser' );
             
             // setting values
-            $oUser->oxuser__oxusername = new oxField($sUserEmail, oxField::T_RAW);
-            $oUser->oxuser__oxactive   = new oxField( 0, oxField::T_RAW);
-            
+            $oUser->oxuser__oxusername      = new oxField($sUserEmail, oxField::T_RAW);
+            $oUser->oxuser__oxactive        = new oxField( 0, oxField::T_RAW);
+            $oUser->oxuser__oxfname         = new oxField( $oShopgateOrderAddress->getFirstName(), oxField::T_RAW);
+            $oUser->oxuser__oxlname         = new oxField( $oShopgateOrderAddress->getSurname(), oxField::T_RAW);
+            $oUser->oxuser__oxstreet        = new oxField( $oShopgateOrderAddress->getStreet(), oxField::T_RAW);
+            $oUser->oxuser__oxstreetnr      = new oxField( '', oxField::T_RAW);
+            $oUser->oxuser__oxcity          = new oxField( $oShopgateOrderAddress->getCity(), oxField::T_RAW);
+            $oUser->oxuser__oxzip           = new oxField( $oShopgateOrderAddress->getZipcode(), oxField::T_RAW);
+            $oUser->oxuser__stateid         = new oxField(
+                $this->_getStateId($oShopgateOrderAddress->getState(), $oShopgateOrderAddress->getStateName()),
+                oxField::T_RAW
+            );
+            $oUser->oxuser__oxcountry       = new oxField( $oShopgateOrderAddress->getCountryName(), oxField::T_RAW);
+            $oUser->oxuser__oxcountryid     = new oxField( $this->_getCountryId($oShopgateOrderAddress->getCountry(), $oShopgateOrderAddress->getCountryName()), oxField::T_RAW);
+            $oUser->oxuser__oxcompany       = new oxField( $oShopgateOrderAddress->getCompany(), oxField::T_RAW);
+            $sPhone = (string) $oShopgateOrder->getCustomerMobile();
+            if (empty($sPhone)) {
+                $sPhone = (string) $oShopgateOrder->getCustomerPhone();
+            }
+            $oUser->oxuser__oxfon           = new oxField( $sPhone, oxField::T_RAW);
+            $oUser->oxuser__oxfax           = new oxField( $oShopgateOrder->getCustomerFax(), oxField::T_RAW);
+            if (strtolower($oShopgateOrderAddress->getGender()) == 'm') {
+                $oUser->oxuser__oxsal           = new oxField( 'MR', oxField::T_RAW);
+            } else if (strtolower($oShopgateOrderAddress ->getGender()) == 'f') {
+                $oUser->oxuser__oxsal           = new oxField( 'MRS', oxField::T_RAW);
+            }
             
             $oUser->createUser();
             return $oUser->getId();
