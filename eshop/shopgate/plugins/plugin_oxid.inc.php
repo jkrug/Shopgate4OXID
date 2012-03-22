@@ -1332,7 +1332,35 @@ class ShopgatePlugin extends ShopgatePluginCore {
         $sUserOxid = $this->_dbGetOne( "SELECT OXID FROM oxuser WHERE OXUSERNAME = ?",
             array($sUserEmail)
         );
-        return $sUserOxid;
+        if(!empty($sUserOxid)){
+            return $sUserOxid;
+        }
+        return $this->_createUserOxidByEmail($sUserEmail);
+    }
+    
+    /**
+     * create a new oxid user by email
+     * @param string $sUserEmail
+     * @return null|string
+     */
+    protected function _createUserOxidByEmail($sUserEmail)
+    {
+        try {
+        
+            $oUser = oxNew( 'oxuser' );
+            
+            // setting values
+            $oUser->oxuser__oxusername = new oxField($sUserEmail, oxField::T_RAW);
+            $oUser->oxuser__oxactive   = new oxField( 0, oxField::T_RAW);
+            
+            
+            $oUser->createUser();
+            return $oUser->getId();
+            
+        }catch (Exception $e){
+            return null;
+        }
+        
     }
 
     /**
