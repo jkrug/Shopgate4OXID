@@ -604,10 +604,9 @@ class ShopgatePlugin extends ShopgatePluginCore {
         if ($sMaxTime > 1 || $sMinTime > 1) {
             $sTranslateIdent .='S';
         }
-        if (!$sText) {
-            $sText = $oArticle->oxarticles__oxstocktext->value;
-        }
-        else {
+
+        if (!$oArticle->oxarticles__oxstocktext->value)
+        {
             $sText .= ' ';
             $sText .= $this->_getTranslation( $sTranslateIdent,
                                               array(
@@ -615,6 +614,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
                                                    'DETAILS_'.$sTranslateIdent
                                               )
             );
+        } else {
+            $sText .= ' ' . $oArticle->oxarticles__oxstocktext->value;
         }
 
         $aItem['available_text'] = $sText;
