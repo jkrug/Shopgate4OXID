@@ -613,7 +613,11 @@ class ShopgatePlugin extends ShopgatePluginCore {
                                           )
         );
         
-        $sText .= ' | ' . $oArticle->oxarticles__oxstocktext->value;
+        $sStockText = ($oArticle->oxarticles__oxstock->value == 0) ? $oArticle->oxarticles__oxnostocktext->value : $oArticle->oxarticles__oxstocktext->value;
+        
+        if(strlen($sStockText) > 0){
+            $sText .= ' | ' . $sStockText;
+        }
         
 
         $aItem['available_text'] = $sText;
