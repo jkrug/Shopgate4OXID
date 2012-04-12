@@ -1206,10 +1206,26 @@ class ShopgatePlugin extends ShopgatePluginCore {
         
         // set shopgate paymenttype
         $oOxidOrder->oxorder__oxpaymenttype = new oxField('oxshopgate', oxField::T_RAW); 
+        $oOxidOrder->oxorder__oxpaymentid = $this->_createUserPayment($oShopgateOrder);
         
         return $oOxidOrder;
     }
 
+    /**
+     * create a new oxuserpayment and returns id
+     * @param ShopgateOrder $oShopgateOrder
+     * return string OXID
+     */
+    protected function _createUserPayment(ShopgateOrder $oShopgateOrder){
+         $oNewPayment = oxNew( 'oxuserpayment' );
+        
+         $oNewPayment->oxpayment__oxpaymentsid = new oxField('oxshopgate', oxField::T_RAW);
+         $oNewPayment->oxpayment__oxuserid = new oxField($this->_getUserOxidByEmail($oShopgateOrder), oxField::T_RAW); 
+         
+         $oNewPayment->save();
+         return $oNewPayment->getId();
+    }
+    
     /**
      * returns updated order with user delivery notes
      * @param oxOrder $oOxidOrder this order will be updated
