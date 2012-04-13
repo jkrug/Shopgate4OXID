@@ -39,8 +39,8 @@ if(!function_exists('getShopBasePath')){
     
 }
 
-define('SHOPGATE_PLUGIN_VERSION','1.0.2');
-define('SHOPGATE_PLUGIN_REVISION','624c7e1');
+define('SHOPGATE_PLUGIN_VERSION','1.0.3');
+define('SHOPGATE_PLUGIN_REVISION','7c015af8be');
 
 
 class ShopgatePlugin extends ShopgatePluginCore {
