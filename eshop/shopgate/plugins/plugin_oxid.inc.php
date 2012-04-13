@@ -612,13 +612,13 @@ class ShopgatePlugin extends ShopgatePluginCore {
                                                'DETAILS_'.$sTranslateIdent
                                           )
         );
-        
-        $sStockText = ($oArticle->oxarticles__oxstock->value == 0) ? $oArticle->oxarticles__oxnostocktext->value : $oArticle->oxarticles__oxstocktext->value;
-        
+
+        $sStockText = ($oArticle->oxarticles__oxstock->value <= 0) ? $oArticle->oxarticles__oxnostocktext->value : $oArticle->oxarticles__oxstocktext->value;
+
         if(strlen($sStockText) > 0){
             $sText .= ' | ' . $sStockText;
         }
-        
+
 
         $aItem['available_text'] = $sText;
         return $aItem;
@@ -1203,11 +1203,12 @@ class ShopgatePlugin extends ShopgatePluginCore {
 
         // shipping cost
         $oOxidOrder->oxorder__oxdelcost = new oxField($oShopgateOrder->getAmountShipping()/100, oxField::T_RAW);
-        
+
         // set shopgate paymenttype
-        $oOxidOrder->oxorder__oxpaymenttype = new oxField('oxshopgate', oxField::T_RAW); 
+        $oOxidOrder->oxorder__oxpaymenttype = new oxField('oxshopgate', oxField::T_RAW);
         $oOxidOrder->oxorder__oxpaymentid = new oxField($this->_createUserPayment($oShopgateOrder), oxField::T_RAW);
-        
+        $oOxidOrder->oxorder__oxpaid = new oxField($oShopgateOrder->getShippingApprovedTime(), oxField::T_RAW);
+
         return $oOxidOrder;
     }
 
