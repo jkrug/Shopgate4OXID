@@ -1206,7 +1206,7 @@ class ShopgatePlugin extends ShopgatePluginCore {
         
         // set shopgate paymenttype
         $oOxidOrder->oxorder__oxpaymenttype = new oxField('oxshopgate', oxField::T_RAW); 
-        $oOxidOrder->oxorder__oxpaymentid = $this->_createUserPayment($oShopgateOrder);
+        $oOxidOrder->oxorder__oxpaymentid = new oxField($this->_createUserPayment($oShopgateOrder), oxField::T_RAW);
         
         return $oOxidOrder;
     }
