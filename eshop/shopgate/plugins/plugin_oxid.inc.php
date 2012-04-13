@@ -1219,8 +1219,8 @@ class ShopgatePlugin extends ShopgatePluginCore {
     protected function _createUserPayment(ShopgateOrder $oShopgateOrder){
          $oNewPayment = oxNew( 'oxuserpayment' );
         
-         $oNewPayment->oxpayment__oxpaymentsid = new oxField('oxshopgate', oxField::T_RAW);
-         $oNewPayment->oxpayment__oxuserid = new oxField($this->_getUserOxidByEmail($oShopgateOrder), oxField::T_RAW); 
+         $oNewPayment->oxuserpayments__oxpaymentsid = new oxField('oxshopgate', oxField::T_RAW);
+         $oNewPayment->oxuserpayments__oxuserid = new oxField($this->_getUserOxidByEmail($oShopgateOrder), oxField::T_RAW); 
          
          $oNewPayment->save();
          return $oNewPayment->getId();
