@@ -38,7 +38,7 @@ class marm_shopgate_oxoutput extends marm_shopgate_oxoutput_parent
      */
     public function marmReplaceBody( $sOutput )
     {
-        if(!isAdmin()) {
+        if(!isAdmin() && $_REQUEST['plain'] != 1) {
             $sMobileSnippet = marm_shopgate::getInstance()->getMobileSnippet();
             $sOutput = str_ireplace("</head>", "{$sMobileSnippet}\n</head>", $sOutput);
         }
